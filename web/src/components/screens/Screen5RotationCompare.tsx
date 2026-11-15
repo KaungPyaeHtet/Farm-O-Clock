@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, type LucideIcon } from "lucide-react";
+import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
 import type { CropGoals, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type RotationApi, inputsFromRotation, type ScoredStrategy } from "@/lib/strategies";
@@ -166,6 +166,13 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
 
       {/* What-if sliders */}
       <div className={`mt-3 md:mt-0 md:flex md:flex-col md:justify-center ${card} p-4 lg:p-6`}>
+        {/* "What if" header marks the sliders as a hypothetical scenario, not real conditions */}
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-sun/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#9a6a0c]">
+            <Sparkles className="h-3.5 w-3.5" /> {t("What if…", "ဒါဆိုရင်…")}
+          </span>
+          <span className="text-xs text-muted">{t("try a different season", "ရာသီ မတူ စမ်းကြည့်ပါ")}</span>
+        </div>
         <div className="mb-1 flex items-center justify-between text-sm">
           <span className="flex items-center gap-1.5 font-bold text-ink">
             <CloudRain className="h-4 w-4 text-water" /> {t("Rain", "မိုး")}

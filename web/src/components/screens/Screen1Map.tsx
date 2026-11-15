@@ -160,12 +160,13 @@ export default function Screen1Map({
           {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
           {locating ? t("Finding you…", "ရှာနေသည်…") : t("Use my location", "ကျွန်ုပ်၏ တည်နေရာ")}
         </button>
-        <div className="pointer-events-none flex items-center gap-1.5 rounded-full border border-white/15 bg-ink/75 px-3 py-1.5 text-xs font-semibold text-white shadow backdrop-blur">
-          <MapPin className="h-3.5 w-3.5" />
-          {pin
-            ? t("Drag the pin onto your field to adjust", "ပင်ကို သင့်လယ်ပေါ် ဆွဲ၍ ချိန်ပါ")
-            : t("or tap the map to drop a pin", "သို့မဟုတ် မြေပုံပေါ် တို့ပါ")}
-        </div>
+        {/* Hint only before a pin exists. The post-pin "drag the pin" line was confusing, so it's gone. */}
+        {!pin && (
+          <div className="pointer-events-none flex items-center gap-1.5 rounded-full border border-white/15 bg-ink/75 px-3 py-1.5 text-xs font-semibold text-white shadow backdrop-blur">
+            <MapPin className="h-3.5 w-3.5" />
+            {t("Tap the map to drop a pin", "မြေပုံပေါ် တို့၍ ပင် ချပါ")}
+          </div>
+        )}
       </div>
     </div>
   );
