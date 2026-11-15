@@ -57,3 +57,36 @@ body {
     opacity: 1;
   }
 }
+
+/* Draggable sowing pin — a dark handle with a white ring over the colour strip. */
+.sow-pin {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: grab;
+}
+.sow-pin:active {
+  cursor: grabbing;
+}
+.sow-pin::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #15200d;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+}
+.sow-pin::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #15200d;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+}
+.sow-pin::-webkit-slider-runnable-track,
+.sow-pin::-moz-range-track {
+  background: transparent;
+}

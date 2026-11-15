@@ -41,6 +41,13 @@ export type ReplayData = {
   growDays: number;
   weeks: { label: string; startDoy: number }[];
   years: { year: number; cells: { risk: ReplayRisk; reason: string }[] }[];
+  weekAgg: {
+    drought: number;
+    flood: number;
+    heat: number;
+    risk: ReplayRisk;
+    goodCount: number;
+  }[];
   bestWeekIndex: number;
   source: string;
 };
