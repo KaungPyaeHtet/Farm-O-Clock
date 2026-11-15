@@ -30,3 +30,17 @@ export type EnvData = {
   terrain: Metric;
   source: string;
 };
+
+export type Verdict = "dry" | "normal" | "wet";
+
+export type HistoryData = {
+  lat: number;
+  lng: number;
+  seasonLabel: string;
+  years: number;
+  verdict: Verdict;
+  rainfall: { thisYear: number; normal: number; percentile: number };
+  temperature: { thisYear: number; normal: number; anomaly: number };
+  series: { year: number; rain: number; temp: number; isCurrent: boolean }[];
+  source: string;
+};
