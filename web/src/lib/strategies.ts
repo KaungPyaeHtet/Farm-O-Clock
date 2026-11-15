@@ -220,12 +220,24 @@ export function scoreStrategies(
     };
   });
 
-  // Mark the best fit for the farmer's goals (ties broken by overall).
+  // Mark the best fit for the farmer's goals. The water-saving and soil-building
+  // plans often need near-identical irrigation (both swap one thirsty crop year
+  // for a thrifty legume), so goalFit ties a lot — especially in wet rice regions.
+  // Break ties toward the plan the farmer's goal is *about* (Save Water → the
+  // water plan); otherwise the final fall-back, `overall` (soil-weighted), hands
+  // the "Best for Save Water" badge to the soil plan. Order: goalFit, then goal
+  // intent, then overall.
+  const GOAL_HOME: Record<GoalId, StrategyId> = {
+    water: "water",
+    nitrogen: "soil",
+    erosion: "soil",
+    income: "baseline",
+  };
+  const intent = (id: StrategyId) => goals.filter((g) => GOAL_HOME[g] === id).length;
   let best = scored[0];
   for (const s of scored) {
-    if (s.goalFit > best.goalFit || (s.goalFit === best.goalFit && s.overall > best.overall)) {
-      best = s;
-    }
+    const d = s.goalFit - best.goalFit || intent(s.id) - intent(best.id) || s.overall - best.overall;
+    if (d > 0) best = s;
   }
   best.isBest = true;
 

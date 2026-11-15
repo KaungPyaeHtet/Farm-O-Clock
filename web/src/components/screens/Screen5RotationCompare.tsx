@@ -134,7 +134,7 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
   const strategies = useMemo(
     () =>
       scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, { ...inputs, country }).sort(
-        (a, b) => b.goalFit - a.goalFit || b.overall - a.overall
+        (a, b) => Number(b.isBest) - Number(a.isBest) || b.goalFit - a.goalFit || b.overall - a.overall
       ),
     [cropGoals.crop, cropGoals.goals, rain, heat, inputs, country]
   );
