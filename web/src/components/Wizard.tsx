@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CropGoals, EnvData, LatLng } from "@/lib/types";
+import { primaryBtn, ghostBtn } from "@/lib/ui";
 import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
 import Screen3CropGoals from "./screens/Screen3CropGoals";
@@ -56,14 +57,17 @@ export default function Wizard() {
   }
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-md flex-col bg-white shadow-xl">
+    <main className="mx-auto flex h-dvh w-full max-w-md flex-col bg-gradient-to-b from-[#123620] to-[#081610] text-white shadow-2xl">
       {/* Brand + progress header */}
-      <header className="shrink-0 border-b border-neutral-200 bg-white px-4 pb-3 pt-4">
+      <header className="shrink-0 border-b border-white/10 px-4 pb-3 pt-4">
         <div className="flex items-center justify-between">
-          <h1 className="flex items-center gap-2 text-lg font-bold text-neutral-900">
-            <span>🌾</span> Field&nbsp;Shift
+          <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight">
+            <span className="grid h-7 w-7 place-items-center rounded-xl bg-lime-400 text-base">
+              🌾
+            </span>
+            Field&nbsp;Shift
           </h1>
-          <span className="text-xs font-medium text-neutral-500">
+          <span className="text-xs font-medium text-white/50">
             Step {step} of {TOTAL_STEPS}
           </span>
         </div>
@@ -72,7 +76,7 @@ export default function Wizard() {
             <div
               key={i}
               className={`h-1.5 flex-1 rounded-full ${
-                i < step ? "bg-green-600" : "bg-neutral-200"
+                i < step ? "bg-lime-400" : "bg-white/15"
               }`}
             />
           ))}
@@ -94,17 +98,17 @@ export default function Wizard() {
       </section>
 
       {/* Sticky footer */}
-      <footer className="shrink-0 border-t border-neutral-200 bg-white px-4 pb-5 pt-3">
+      <footer className="shrink-0 border-t border-white/10 px-4 pb-5 pt-3">
         {step === 1 &&
           (pin ? (
-            <p className="mb-3 text-center text-sm text-neutral-600">
+            <p className="mb-3 text-center text-sm text-white/70">
               📍 Farm selected:{" "}
-              <span className="font-semibold text-neutral-900">
+              <span className="font-semibold text-lime-300">
                 {pin.lat.toFixed(3)}, {pin.lng.toFixed(3)}
               </span>
             </p>
           ) : (
-            <p className="mb-3 text-center text-sm text-neutral-400">
+            <p className="mb-3 text-center text-sm text-white/40">
               No farm selected yet
             </p>
           ))}
@@ -112,14 +116,14 @@ export default function Wizard() {
           <button
             onClick={back}
             disabled={step === 1}
-            className="flex-1 rounded-xl border border-neutral-200 py-3 text-sm font-semibold text-neutral-600 transition enabled:hover:bg-neutral-50 disabled:text-neutral-300"
+            className={`flex-1 py-3 text-sm ${ghostBtn}`}
           >
             Back
           </button>
           <button
             disabled={!canNext}
             onClick={next}
-            className="flex-[2] rounded-xl bg-green-600 py-3 text-sm font-semibold text-white transition enabled:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-400"
+            className={`flex-[2] py-3 text-sm ${primaryBtn}`}
           >
             {NEXT_LABEL[step] ?? "Next Step →"}
           </button>

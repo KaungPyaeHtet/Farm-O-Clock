@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { EnvData, LatLng, Metric, Status } from "@/lib/types";
-
-const STATUS_STYLES: Record<Status, { dot: string; pill: string }> = {
-  good: { dot: "bg-green-500", pill: "bg-green-50 text-green-700" },
-  watch: { dot: "bg-amber-500", pill: "bg-amber-50 text-amber-700" },
-  alert: { dot: "bg-red-500", pill: "bg-red-50 text-red-700" },
-};
+import type { EnvData, LatLng, Metric } from "@/lib/types";
+import { glass, STATUS_DOT, STATUS_PILL } from "@/lib/ui";
 
 const CARDS: {
   key: keyof Pick<EnvData, "soilMoisture" | "rainfall" | "heat" | "terrain">;
@@ -29,23 +24,22 @@ function MetricCard({
   title: string;
   metric: Metric;
 }) {
-  const s = STATUS_STYLES[metric.status];
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className={`${glass} p-4`}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-neutral-500">
+        <span className="text-sm font-medium text-white/60">
           {icon} {title}
         </span>
-        <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
+        <span className={`h-2.5 w-2.5 rounded-full ${STATUS_DOT[metric.status]}`} />
       </div>
       <div className="mt-2 flex items-baseline gap-1">
-        <span className="text-3xl font-bold text-neutral-900">
+        <span className="text-3xl font-bold text-white">
           {metric.value ?? "—"}
         </span>
-        <span className="text-sm text-neutral-500">{metric.unit}</span>
+        <span className="text-sm text-white/50">{metric.unit}</span>
       </div>
       <span
-        className={`mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-medium ${s.pill}`}
+        className={`mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_PILL[metric.status]}`}
       >
         {metric.label}
       </span>
@@ -55,10 +49,10 @@ function MetricCard({
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-2xl border border-neutral-200 bg-white p-4">
-      <div className="h-4 w-24 rounded bg-neutral-200" />
-      <div className="mt-3 h-8 w-16 rounded bg-neutral-200" />
-      <div className="mt-3 h-5 w-28 rounded-full bg-neutral-200" />
+    <div className={`${glass} animate-pulse p-4`}>
+      <div className="h-4 w-24 rounded bg-white/10" />
+      <div className="mt-3 h-8 w-16 rounded bg-white/10" />
+      <div className="mt-3 h-5 w-28 rounded-full bg-white/10" />
     </div>
   );
 }
@@ -99,15 +93,13 @@ export default function Screen2Environment({
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4">
-      <h2 className="text-lg font-bold text-neutral-900">
-        What the satellites see
-      </h2>
-      <p className="mt-0.5 text-sm text-neutral-500">
+      <h2 className="text-lg font-bold text-white">What the satellites see</h2>
+      <p className="mt-0.5 text-sm text-white/50">
         Live NASA data for 📍 {pin.lat.toFixed(3)}, {pin.lng.toFixed(3)}
       </p>
 
       {error ? (
-        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="mt-6 rounded-3xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">
           Couldn’t load NASA data: {error}
         </div>
       ) : (
@@ -126,7 +118,7 @@ export default function Screen2Environment({
       )}
 
       {data && (
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-neutral-400">
+        <p className="mt-4 text-center text-[11px] leading-relaxed text-white/35">
           Source: {data.source}
         </p>
       )}

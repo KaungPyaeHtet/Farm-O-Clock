@@ -55,15 +55,13 @@ export default function Screen3CropGoals({
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4">
-      <h2 className="text-lg font-bold text-neutral-900">
-        Your crop &amp; goals
-      </h2>
-      <p className="mt-0.5 text-sm text-neutral-500">
+      <h2 className="text-lg font-bold text-white">Your crop &amp; goals</h2>
+      <p className="mt-0.5 text-sm text-white/50">
         Tell us what you grow and what matters most this season.
       </p>
 
       {/* Current crop */}
-      <h3 className="mt-5 text-sm font-semibold text-neutral-700">
+      <h3 className="mt-5 text-sm font-semibold text-white/80">
         What are you growing now?
       </h3>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -75,8 +73,8 @@ export default function Screen3CropGoals({
               onClick={() => onChange({ ...value, crop: c.id })}
               className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
                 selected
-                  ? "border-green-600 bg-green-600 text-white"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                  ? "border-lime-400 bg-lime-400 text-green-950"
+                  : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
               }`}
             >
               {c.label}
@@ -87,10 +85,8 @@ export default function Screen3CropGoals({
 
       {/* Goals */}
       <div className="mt-6 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-neutral-700">
-          Your top goals
-        </h3>
-        <span className="text-xs text-neutral-400">
+        <h3 className="text-sm font-semibold text-white/80">Your top goals</h3>
+        <span className="text-xs text-white/40">
           {value.goals.length}/2 chosen
         </span>
       </div>
@@ -105,25 +101,23 @@ export default function Screen3CropGoals({
               disabled={disabled}
               className={`rounded-2xl border p-3 text-left transition ${
                 selected
-                  ? "border-green-600 bg-green-50"
+                  ? "border-lime-400 bg-lime-400/10"
                   : disabled
-                    ? "border-neutral-200 bg-neutral-50 opacity-50"
-                    : "border-neutral-300 bg-white hover:bg-neutral-50"
+                    ? "border-white/5 bg-white/[0.02] opacity-40"
+                    : "border-white/15 bg-white/5 hover:bg-white/10"
               }`}
             >
-              <div className="text-sm font-semibold text-neutral-900">
-                {g.label}
-              </div>
-              <div className="mt-0.5 text-xs text-neutral-500">{g.hint}</div>
+              <div className="text-sm font-semibold text-white">{g.label}</div>
+              <div className="mt-0.5 text-xs text-white/50">{g.hint}</div>
             </button>
           );
         })}
       </div>
 
       {/* Constraints */}
-      <h3 className="mt-6 text-sm font-semibold text-neutral-700">
+      <h3 className="mt-6 text-sm font-semibold text-white/80">
         Any constraints?{" "}
-        <span className="font-normal text-neutral-400">(optional)</span>
+        <span className="font-normal text-white/40">(optional)</span>
       </h3>
       <div className="mt-2 space-y-2">
         {CONSTRAINTS.map((c) => {
@@ -134,16 +128,16 @@ export default function Screen3CropGoals({
               onClick={() => toggleConstraint(c.id)}
               className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
                 selected
-                  ? "border-green-600 bg-green-50 text-neutral-900"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                  ? "border-lime-400 bg-lime-400/10 text-white"
+                  : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
               }`}
             >
               <span>{c.label}</span>
               <span
                 className={`grid h-5 w-5 place-items-center rounded-md border text-xs ${
                   selected
-                    ? "border-green-600 bg-green-600 text-white"
-                    : "border-neutral-300 text-transparent"
+                    ? "border-lime-400 bg-lime-400 text-green-950"
+                    : "border-white/25 text-transparent"
                 }`}
               >
                 ✓

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { CropGoals } from "@/lib/types";
 import { scoreStrategies, type ScoredStrategy } from "@/lib/strategies";
+import { glass } from "@/lib/ui";
 
 function Bar({
   icon,
@@ -14,19 +15,19 @@ function Bar({
   value: number;
 }) {
   const color =
-    value >= 66 ? "bg-green-500" : value >= 40 ? "bg-amber-500" : "bg-red-500";
+    value >= 66 ? "bg-lime-400" : value >= 40 ? "bg-amber-400" : "bg-red-400";
   return (
     <div className="flex items-center gap-2">
-      <span className="w-28 shrink-0 text-xs text-neutral-500">
+      <span className="w-28 shrink-0 text-xs text-white/55">
         {icon} {label}
       </span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
         <div
           className={`h-full rounded-full ${color}`}
           style={{ width: `${value}%` }}
         />
       </div>
-      <span className="w-6 shrink-0 text-right text-xs font-semibold text-neutral-700">
+      <span className="w-6 shrink-0 text-right text-xs font-semibold text-white/80">
         {value}
       </span>
     </div>
@@ -36,27 +37,27 @@ function Bar({
 function StrategyCard({ s }: { s: ScoredStrategy }) {
   return (
     <div
-      className={`rounded-2xl border p-4 ${
+      className={`rounded-3xl border p-4 ${
         s.isBest
-          ? "border-green-500 bg-green-50/40 ring-1 ring-green-500"
-          : "border-neutral-200 bg-white"
+          ? "border-lime-400 bg-lime-400/[0.07] ring-1 ring-lime-400/60"
+          : "border-white/10 bg-white/[0.06]"
       }`}
     >
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-neutral-900">{s.name}</h3>
+            <h3 className="text-sm font-bold text-white">{s.name}</h3>
             {s.isBest && (
-              <span className="rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-lime-400 px-2 py-0.5 text-[10px] font-semibold text-green-950">
                 ⭐ Best for your goals
               </span>
             )}
           </div>
-          <p className="text-xs text-neutral-500">{s.tag}</p>
+          <p className="text-xs text-white/50">{s.tag}</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-neutral-900">{s.overall}</div>
-          <div className="text-[10px] text-neutral-400">overall</div>
+          <div className="text-2xl font-bold text-white">{s.overall}</div>
+          <div className="text-[10px] text-white/40">overall</div>
         </div>
       </div>
 
@@ -64,11 +65,11 @@ function StrategyCard({ s }: { s: ScoredStrategy }) {
       <div className="mt-3 flex items-center gap-1">
         {s.rotation.map((crop, i) => (
           <div key={i} className="flex items-center gap-1">
-            <span className="rounded-md bg-neutral-100 px-2 py-1 text-[11px] font-medium text-neutral-700">
+            <span className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-medium text-white/80">
               Y{i + 1}: {crop}
             </span>
             {i < s.rotation.length - 1 && (
-              <span className="text-neutral-300">→</span>
+              <span className="text-white/30">→</span>
             )}
           </div>
         ))}
@@ -110,17 +111,17 @@ export default function Screen5RotationCompare({
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4">
-      <h2 className="text-lg font-bold text-neutral-900">Compare strategies</h2>
-      <p className="mt-0.5 text-sm text-neutral-500">
+      <h2 className="text-lg font-bold text-white">Compare strategies</h2>
+      <p className="mt-0.5 text-sm text-white/50">
         Three rotation pathways over 3 years. Drag the sliders to stress-test
         them.
       </p>
 
       {/* What-if sliders */}
-      <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
+      <div className={`mt-4 ${glass} p-4`}>
         <div className="mb-1 flex items-center justify-between text-sm">
-          <span className="font-semibold text-neutral-700">🌧️ Rain</span>
-          <span className="text-xs font-medium text-blue-600">
+          <span className="font-semibold text-white/80">🌧️ Rain</span>
+          <span className="text-xs font-medium text-sky-300">
             {sliderLabel("rain", rain)}
           </span>
         </div>
@@ -130,16 +131,16 @@ export default function Screen5RotationCompare({
           max={100}
           value={rain}
           onChange={(e) => setRain(+e.target.value)}
-          className="w-full accent-blue-600"
+          className="w-full accent-sky-400"
         />
-        <div className="flex justify-between text-[10px] text-neutral-400">
+        <div className="flex justify-between text-[10px] text-white/40">
           <span>Drier</span>
           <span>Wetter</span>
         </div>
 
         <div className="mt-3 mb-1 flex items-center justify-between text-sm">
-          <span className="font-semibold text-neutral-700">🌡️ Heat</span>
-          <span className="text-xs font-medium text-red-600">
+          <span className="font-semibold text-white/80">🌡️ Heat</span>
+          <span className="text-xs font-medium text-red-300">
             {sliderLabel("heat", heat)}
           </span>
         </div>
@@ -149,9 +150,9 @@ export default function Screen5RotationCompare({
           max={100}
           value={heat}
           onChange={(e) => setHeat(+e.target.value)}
-          className="w-full accent-red-600"
+          className="w-full accent-red-400"
         />
-        <div className="flex justify-between text-[10px] text-neutral-400">
+        <div className="flex justify-between text-[10px] text-white/40">
           <span>Cooler</span>
           <span>Hotter</span>
         </div>

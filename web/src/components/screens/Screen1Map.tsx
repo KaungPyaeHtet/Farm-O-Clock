@@ -33,8 +33,8 @@ export default function Screen1Map({
 
       {/* Floating instruction card */}
       <div className="pointer-events-none absolute left-1/2 top-3 z-[1000] -translate-x-1/2">
-        <div className="rounded-full bg-neutral-900/85 px-4 py-2 text-center text-sm font-medium text-white shadow-lg backdrop-blur">
-          🗺️ Tap the map to drop your farm pin
+        <div className="rounded-full border border-white/15 bg-black/50 px-4 py-2 text-center text-sm font-medium text-white shadow-lg backdrop-blur-md">
+          🛰️ Tap the map to drop your farm pin
         </div>
       </div>
 
@@ -44,7 +44,7 @@ export default function Screen1Map({
           <button
             key={p.label}
             onClick={() => onPick({ lat: p.lat, lng: p.lng })}
-            className="rounded-full border border-neutral-300 bg-white/95 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition hover:bg-green-50 hover:text-green-700"
+            className="rounded-full border border-white/15 bg-black/50 px-3 py-1.5 text-xs font-medium text-white shadow-sm backdrop-blur-md transition hover:border-lime-400/60 hover:text-lime-300"
           >
             {p.label}
           </button>

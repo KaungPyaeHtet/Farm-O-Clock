@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #e8ede9;
-  --foreground: #171717;
+  --background: #09160e;
+  --foreground: #eef4ea;
 }
 
 @theme inline {
@@ -12,9 +12,23 @@
   --font-mono: var(--font-geist-mono);
 }
 
-
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1100px 520px at 50% -8%, #1f5131 0%, rgba(31, 81, 49, 0) 62%),
+    linear-gradient(180deg, #0e2a19 0%, #081610 100%);
+  background-attachment: fixed;
+}
+
+/* Leaflet tiles sit under glass chrome; keep attribution subtle on dark. */
+.leaflet-container {
+  background: #0c1f14;
+}
+.leaflet-control-attribution {
+  background: rgba(9, 22, 14, 0.7) !important;
+  color: rgba(238, 244, 234, 0.55) !important;
+}
+.leaflet-control-attribution a {
+  color: rgba(163, 230, 53, 0.8) !important;
 }
