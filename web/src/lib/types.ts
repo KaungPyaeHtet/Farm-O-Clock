@@ -11,6 +11,15 @@ export type Metric = {
   label: string;
 };
 
+export type GoalId = "water" | "nitrogen" | "erosion" | "income";
+export type ConstraintId = "no_machinery" | "frost_sensitive";
+
+export type CropGoals = {
+  crop: string | null;
+  goals: GoalId[]; // 1–2 primary goals
+  constraints: ConstraintId[]; // optional
+};
+
 export type EnvData = {
   lat: number;
   lng: number;

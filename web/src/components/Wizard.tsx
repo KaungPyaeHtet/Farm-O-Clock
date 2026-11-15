@@ -1,32 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import type { EnvData, LatLng } from "@/lib/types";
+import type { CropGoals, EnvData, LatLng } from "@/lib/types";
 import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
+import Screen3CropGoals from "./screens/Screen3CropGoals";
 
 const TOTAL_STEPS = 6;
-const LAST_BUILT_STEP = 2; // screens 3–6 are placeholders for now
+const LAST_BUILT_STEP = 3; // screens 4–6 are placeholders for now
 
 // Per-step label for the primary "Next" button.
 const NEXT_LABEL: Record<number, string> = {
-  1: "Next Step →",
-  2: "Analyze Field →",
+  1: "Continue →",
+  2: "Next →",
+  3: "Analyze Field →",
 };
 
 export default function Wizard() {
   const [step, setStep] = useState(1);
   const [pin, setPin] = useState<LatLng | null>(null);
   const [, setEnv] = useState<EnvData | null>(null);
+  const [cropGoals, setCropGoals] = useState<CropGoals>({
+    crop: null,
+    goals: [],
+    constraints: [],
+  });
 
-  const canNext = step === 1 ? !!pin : true;
+  const canNext =
+    step === 1
+      ? !!pin
+      : step === 3
+        ? !!cropGoals.crop && cropGoals.goals.length >= 1
+        : true;
 
   function next() {
     if (step < LAST_BUILT_STEP) {
       setStep((s) => s + 1);
     } else {
       alert(
-        "Screens 3–6 (crop & goals, historical context, rotation comparison, AI guidance) are coming in the next feature branches! 🚧"
+        "Screens 4–6 (historical context, rotation comparison, AI guidance) are coming in the next feature branches! 🚧"
       );
     }
   }
@@ -64,6 +76,9 @@ export default function Wizard() {
         {step === 1 && <Screen1Map pin={pin} onPick={setPin} />}
         {step === 2 && pin && (
           <Screen2Environment pin={pin} onLoaded={setEnv} />
+        )}
+        {step === 3 && (
+          <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />
         )}
       </section>
 
