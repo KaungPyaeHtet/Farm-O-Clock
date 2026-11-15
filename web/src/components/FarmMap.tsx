@@ -31,7 +31,7 @@ function RecenterOnPin({ position }: { position: LatLng | null }) {
   const map = useMap();
   useEffect(() => {
     if (position) {
-      map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 8), {
+      map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 13), {
         duration: 1.2,
       });
     }
@@ -67,10 +67,25 @@ export default function FarmMap({
         attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics"
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
       />
+      {/* Country, region, city and town names over the satellite photo, so farmers know where they are */}
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+        attribution="Labels &copy; Esri"
+      />
       <ClickHandler onPick={onPick} />
       <RecenterOnPin position={position} />
       {position && (
-        <Marker position={[position.lat, position.lng]} icon={pinIcon} />
+        <Marker
+          position={[position.lat, position.lng]}
+          icon={pinIcon}
+          draggable
+          eventHandlers={{
+            dragend: (e) => {
+              const ll = (e.target as L.Marker).getLatLng();
+              onPick({ lat: ll.lat, lng: ll.lng });
+            },
+          }}
+        />
       )}
     </MapContainer>
   );

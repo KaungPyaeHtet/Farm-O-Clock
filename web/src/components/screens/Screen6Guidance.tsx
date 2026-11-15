@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Volume2, Square, Share2, Check, CalendarCheck, Sprout, CloudSun, Shovel } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Share2, Check, CalendarCheck, Sprout, CloudSun, Shovel } from "lucide-react";
 import type { CropGoals, EnvData, HistoryData, LatLng, ReplayData, SoilData, Verdict } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { cropLabel, scoreStrategies, STRATEGY_TEXT, type FieldInputs } from "@/lib/strategies";
@@ -10,6 +10,7 @@ import { shareCard } from "@/lib/shareCard";
 import { card, primaryBtn } from "@/lib/ui";
 import { fetchJson } from "@/lib/fetchJson";
 import { Screen } from "@/components/Screen";
+import { bestUpcoming, fmtDate, fromNow, seasonDates } from "@/lib/season";
 
 const VERDICT: Record<Verdict, { en: string; my: string; dot: string }> = {
   dry: { en: "Drier than usual", my: "ပုံမှန်ထက် ခြောက်", dot: "bg-clay" },
@@ -40,12 +41,12 @@ export default function Screen6Guidance({
   const { lang, t } = useLang();
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [sowing, setSowing] = useState<string | null>(null);
+  const [sowMeta, setSowMeta] = useState<{ date: Date; chance: number | null } | null>(null);
+  const [soilText, setSoilText] = useState<{ texture: string; organic: string } | null>(null);
   const [checked, setChecked] = useState<Record<number, boolean>>({});
-  const [speaking, setSpeaking] = useState(false);
   const [damp, setDamp] = useState<boolean | null>(null);
   const [satWet, setSatWet] = useState<number | null>(null);
   const [inputs, setInputs] = useState<FieldInputs>({});
-  const [noVoice, setNoVoice] = useState(false);
 
   const best = useMemo(() => {
     const scored = scoreStrategies(cropGoals.crop, cropGoals.goals, 50, 50, inputs);
@@ -62,13 +63,23 @@ export default function Screen6Guidance({
       .then((d) => active && setInputs((i) => ({ ...i, water: d.rotations })))
       .catch(() => {});
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
-      .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health })))
+      .then((d) => {
+        if (!active) return;
+        setInputs((i) => ({ ...i, soilHealth: d.health }));
+        setSoilText({ texture: d.texture, organic: d.organic });
+      })
       .catch(() => {});
     fetchJson<EnvData>(`/api/environment?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => active && d.soilMoisture.value != null && setSatWet(d.soilMoisture.value / 100))
       .catch(() => {});
     fetchJson<ReplayData>(`/api/replay?lat=${pin.lat}&lng=${pin.lng}`)
-      .then((d) => active && setSowing(d.weeks[d.bestWeekIndex]?.label ?? null))
+      .then((d) => {
+        if (!active) return;
+        const dates = seasonDates(d.weeks);
+        const i = bestUpcoming(dates, (k) => d.weekAgg[k].chance ?? d.weekAgg[k].goodCount / 20);
+        setSowing(dates[i] ? fmtDate(dates[i].date) : (d.weeks[i]?.label ?? null));
+        if (dates[i]) setSowMeta({ date: dates[i].date, chance: d.weekAgg[i]?.chance ?? null });
+      })
       .catch(() => {});
     return () => {
       active = false;
@@ -84,35 +95,30 @@ export default function Screen6Guidance({
   const whyText = brief.why;
   const checklist = brief.checklist;
 
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
-
-  function toggleSpeak() {
-    if (!window.speechSynthesis) return;
-    const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find((v) => v.lang.toLowerCase().startsWith(lang === "my" ? "my" : "en"));
-    if (lang === "my" && voices.length && !voice) {
-      setNoVoice(true); // phone has no Burmese voice — tell the farmer instead of reading silence
-      return;
-    }
-    if (speaking) {
-      window.speechSynthesis.cancel();
-      setSpeaking(false);
-      return;
-    }
-    const text = [
-      brief.headline,
-      sowing ? t(`Sow around ${sowing}.`, `${sowing} ဝန်းကျင် စိုက်ပါ။`) : "",
-      ...brief.body,
-    ].join(" ");
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang === "my" ? "my-MM" : "en-US";
-    if (voice) u.voice = voice;
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-    setSpeaking(true);
-  }
+  // Save the finished plan once (anonymous) to Supabase `fields` + `plans` (no-op without a database).
+  const savedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!pin || !sowing || !verdict) return;
+    const key = JSON.stringify([pin.lat, pin.lng, cropGoals.crop, cropGoals.goals, best.id, sowing]);
+    if (savedKey.current === key) return;
+    savedKey.current = key;
+    fetch("/api/plans", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lat: pin.lat,
+        lng: pin.lng,
+        crop: cropGoals.crop,
+        goals: cropGoals.goals,
+        constraints: cropGoals.constraints,
+        lang,
+        sowingWeek: sowing,
+        strategyId: best.id,
+        verdict,
+        scores: { soil: best.soil, water: best.waterThrift, resilience: best.resilience, irrigation_mm: best.irrigationMm },
+      }),
+    }).catch(() => {});
+  }, [pin, sowing, verdict, cropGoals, best, lang]);
 
   // Farmer ground truth → community observations (no-op without a database).
   function answerDamp(v: boolean) {
@@ -131,17 +137,46 @@ export default function Screen6Guidance({
   }
 
   function share() {
+    const rel = sowMeta ? fromNow(sowMeta.date, t) : null;
+    const inTen = sowMeta?.chance != null ? Math.round(sowMeta.chance * 10) : null;
+    const sub = [rel, inTen != null ? t(`about ${inTen} in 10 seasons go well`, `ရာသီ ၁၀ ခုတွင် ${inTen} ခုခန့် အဆင်ပြေ`) : null]
+      .filter(Boolean)
+      .join(" · ");
+    const water = best.irrigationMm;
+    const ORGANIC: Record<string, [string, string]> = { good: ["good", "ကောင်း"], medium: ["medium", "အလယ်အလတ်"], low: ["low", "နည်း"] };
     shareCard({
-      subtitle: t("Your planting plan", "သင့် စိုက်ပျိုးရေး အစီအစဉ်"),
-      location: place || t("Your field", "သင့်လယ်"),
-      lines: [
-        ...(sowing ? [{ label: t("Sow around", "စိုက်ရန်"), value: sowing }] : []),
-        { label: t("Plan", "အစီအစဉ်"), value: `${planName}: ${best.rotation.map((c) => cropLabel(c, lang)).join(" → ")}` },
-        { label: t("This season", "ဤရာသီ"), value: verdict ? t(VERDICT[verdict].en, VERDICT[verdict].my) : "—" },
+      brand: t("FARM O’CLOCK · PLANTING PLAN", "FARM O’CLOCK · စိုက်ပျိုးရေး အစီအစဉ်"),
+      place: place || t("Your field", "သင့်လယ်"),
+      dateLine: t(`Made ${fmtDate(new Date())}`, `ပြုလုပ်သည့်ရက် ${fmtDate(new Date())}`),
+      hero: { label: t("SOW AROUND", "စိုက်ရန်"), value: sowing ?? "—", sub: sub || undefined },
+      stats: [
+        {
+          label: t("THIS SEASON", "ဤရာသီ"),
+          value: verdict ? t(VERDICT[verdict].en, VERDICT[verdict].my) : "—",
+          tone: verdict === "dry" ? "alert" : verdict === "wet" ? "info" : "good",
+        },
+        { label: t("PLAN", "အစီအစဉ်"), value: planName },
+        {
+          label: t("EXTRA WATER, 3 YEARS", "ထပ်လိုရေ (၃ နှစ်)"),
+          value: water == null ? "—" : water < 50 ? t("Rain covers it", "မိုးဖြင့် လုံလောက်") : `${water.toLocaleString()} mm`,
+          tone: water == null ? undefined : water < 300 ? "good" : water < 1200 ? "watch" : "alert",
+        },
+        {
+          label: t("SOIL", "မြေ"),
+          value: soilText
+            ? `${soilText.texture} · ${t("organic", "အော်ဂဲနစ်")} ${t(...(ORGANIC[soilText.organic] ?? [soilText.organic, soilText.organic]))}`
+            : "—",
+        },
       ],
-      checklistTitle: t("Check before you plant", "မစိုက်ခင် စစ်ဆေးပါ"),
-      checklist: [t("Soil is damp 15 cm down", "မြေ ၁၅ စင်တီမီတာ အောက်တွင် စိုနေသည်"), ...checklist],
-      footer: t("Powered by NASA Earth data", "NASA ကမ္ဘာ့ဒေတာဖြင့်"),
+      rotationTitle: t("3-YEAR CROP PLAN", "၃ နှစ် သီးနှံ အစီအစဉ်"),
+      rotation: best.rotation.map((c, i) => ({
+        label: t(`Year ${i + 1}`, `နှစ် ${i + 1}`),
+        value: cropLabel(c, lang),
+        highlight: i === 1 && best.id !== "baseline",
+      })),
+      checklistTitle: t("Before you plant", "မစိုက်ခင်"),
+      checklist: [t("Dig 15 cm: the soil should feel damp", "၁၅ စင်တီမီတာ တူးပါ: မြေ စိုနေရမည်"), ...checklist],
+      footer: t("NASA POWER · MODIS · SoilGrids  —  farm-oclock-five.vercel.app", "NASA POWER · MODIS · SoilGrids  —  farm-oclock-five.vercel.app"),
       shareTitle: "Farm O’Clock",
     });
   }
@@ -162,17 +197,7 @@ export default function Screen6Guidance({
         {/* The plan */}
         <div>
           <div className={`${card} p-4 lg:p-5`}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-ink">{t("At a glance", "အကျဉ်းချုပ်")}</h3>
-              <button
-                onClick={toggleSpeak}
-                aria-label={speaking ? t("Stop reading", "ဖတ်ခြင်း ရပ်") : t("Read aloud", "ဖတ်ပြ")}
-                className="inline-flex items-center gap-1.5 rounded-full border border-grass/40 px-3 py-1.5 text-xs font-semibold text-grass transition hover:bg-grass/10"
-              >
-                {speaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                {speaking ? t("Stop", "ရပ်") : t("Listen", "နားထောင်")}
-              </button>
-            </div>
+            <h3 className="text-sm font-bold text-ink">{t("At a glance", "အကျဉ်းချုပ်")}</h3>
 
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               <Fact Icon={CalendarCheck} label={t("Sow around", "စိုက်ရန်")}>
@@ -213,14 +238,6 @@ export default function Screen6Guidance({
             </ol>
 
             <p className="mt-3 text-sm leading-relaxed text-muted">{whyText}</p>
-            {noVoice && (
-              <p className="mt-2 rounded-lg bg-sun/15 p-2 text-xs text-[#9a6a0c]">
-                {t(
-                  "This phone has no Burmese voice. Add “Myanmar (Burmese)” in the phone's text-to-speech settings, or switch to English.",
-                  "ဤဖုန်းတွင် မြန်မာအသံ မရှိပါ။ ဖုန်း၏ စာဖတ်အသံ ဆက်တင်တွင် မြန်မာဘာသာ ထည့်ပါ၊ သို့မဟုတ် English သို့ ပြောင်းပါ။"
-                )}
-              </p>
-            )}
           </div>
 
           <button onClick={share} className={`mt-3 flex w-full items-center justify-center gap-2 py-3.5 text-sm ${primaryBtn}`}>

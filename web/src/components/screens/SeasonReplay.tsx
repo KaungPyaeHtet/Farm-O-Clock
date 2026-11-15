@@ -7,6 +7,7 @@ import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
 import { card, RISK_WORDS } from "@/lib/ui";
 import { Screen, ErrorBox } from "@/components/Screen";
+import { bestUpcoming, fmtDate, fromNow, seasonDates } from "@/lib/season";
 
 const CELL: Record<ReplayRisk, string> = {
   good: "bg-grass",
@@ -94,9 +95,11 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
         bad: cells.filter((c) => c.risk === "alert"),
       };
     }) ?? [];
-  const sel = picked ?? data?.bestWeekIndex ?? 0;
+  // Best week still ahead in the current/next season (real dates, not just "5 Aug").
+  const dates = data ? seasonDates(data.weeks) : [];
+  const bestIdx = data ? bestUpcoming(dates, (i) => data.weekAgg[i].chance ?? cols[i]?.good / 20) : 0;
+  const sel = picked ?? bestIdx;
   const col = cols[sel];
-  const maxN = Math.max(1, ...cols.map((c) => c.n));
 
   return (
     <Screen
@@ -118,16 +121,17 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
               <CalendarCheck className="mt-0.5 h-5 w-5 shrink-0 text-grass" />
               <p className="text-sm text-ink">
                 {(() => {
-                  const b = cols[data.bestWeekIndex];
-                  const ch = data.weekAgg[data.bestWeekIndex]?.chance;
+                  const dd = dates[bestIdx];
+                  const when = dd ? `${fmtDate(dd.date)} (${fromNow(dd.date, t)})` : cols[bestIdx].label;
+                  const ch = data.weekAgg[bestIdx]?.chance;
                   return ch != null
                     ? t(
-                        `Best time to sow: around ${b.label}. About ${Math.round(ch * 10)} in 10 seasons go well.`,
-                        `အကောင်းဆုံး စိုက်ချိန်: ${b.label} ဝန်းကျင်။ ရာသီ ၁၀ ခုတွင် ${Math.round(ch * 10)} ခုခန့် အဆင်ပြေသည်။`
+                        `Best time to sow: around ${when}. About ${Math.round(ch * 10)} in 10 seasons go well.`,
+                        `အကောင်းဆုံး စိုက်ချိန်: ${when} ဝန်းကျင်။ ရာသီ ၁၀ ခုတွင် ${Math.round(ch * 10)} ခုခန့် အဆင်ပြေသည်။`
                       )
                     : t(
-                        `Best time to sow: around ${b.label}. ${b.good} of ${b.n} past seasons were low risk.`,
-                        `အကောင်းဆုံး စိုက်ချိန်: ${b.label} ဝန်းကျင်။ ယခင် ရာသီ ${b.n} ခုအနက် ${b.good} ခု အန္တရာယ်နည်းခဲ့သည်။`
+                        `Best time to sow: around ${when}. ${cols[bestIdx].good} of ${cols[bestIdx].n} past seasons were low risk.`,
+                        `အကောင်းဆုံး စိုက်ချိန်: ${when} ဝန်းကျင်။ ယခင် ရာသီ ${cols[bestIdx].n} ခုအနက် ${cols[bestIdx].good} ခု အန္တရာယ်နည်းခဲ့သည်။`
                       );
                 })()}
               </p>
@@ -135,15 +139,31 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
           </div>
 
           <div className={`mt-3 lg:order-1 lg:mt-0 ${card} p-4 lg:p-6`}>
-            {/* Phone: year × week grid */}
-            <div className="lg:hidden">
-              <p className="mb-2 text-xs text-muted">
-                {t("Each square = one past year (row) sown in one week (column). Tap one.", "အကွက် = ယခင်နှစ် (တန်း) × စိုက်သည့်အပတ် (တိုင်)။ တို့ကြည့်ပါ။")}
-              </p>
-              <div className="space-y-[3px]">
+            {/* Year × week heatmap — same chart on phone and desktop (fixed squares on desktop) */}
+            <p className="mb-2 text-xs text-muted lg:text-sm">
+              {t("Each square = one past year (row) sown in one week (column). Tap one.", "အကွက် = ယခင်နှစ် (တန်း) × စိုက်သည့်အပတ် (တိုင်)။ တို့ကြည့်ပါ။")}
+            </p>
+            <div className="lg:mx-auto lg:w-fit">
+              {/* week labels (desktop) */}
+              <div className="hidden items-end gap-1 pb-1.5 lg:flex">
+                <span className="w-12 shrink-0" />
+                {cols.map((c, i) => (
+                  <span key={i} className="flex w-10 flex-col items-center gap-0.5">
+                    {i === bestIdx && (
+                      <span className="rounded-full bg-grass px-1.5 py-px text-[9px] font-bold text-white">{t("Best", "အကောင်း")}</span>
+                    )}
+                    <span className={`text-center text-[10px] leading-tight ${i === sel ? "font-bold text-ink" : "text-muted"}`}>
+                      {c.label.split(" ").map((p, k) => (
+                        <span key={k} className="block">{p}</span>
+                      ))}
+                    </span>
+                  </span>
+                ))}
+              </div>
+              <div className="space-y-[3px] lg:space-y-1">
                 {data.years.map((yr) => (
-                  <div key={yr.year} className="flex items-center gap-[3px]">
-                    <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-muted">{yr.year}</span>
+                  <div key={yr.year} className="flex items-center gap-[3px] lg:gap-1">
+                    <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-muted lg:w-12 lg:pr-1 lg:text-xs">{yr.year}</span>
                     {yr.cells.map((c, ci) => (
                       <button
                         key={ci}
@@ -151,86 +171,32 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
                           setPicked(ci);
                           setPickedYear(yr.year);
                         }}
-                        aria-label={`${yr.year} ${data.weeks[ci].label}`}
-                        className={`h-4 flex-1 rounded-[3px] ${CELL[c.risk]} ${
-                          ci === data.bestWeekIndex ? "ring-1 ring-inset ring-ink/40" : ""
+                        title={`${yr.year} · ${data.weeks[ci].label}`}
+                        aria-label={`${yr.year} ${data.weeks[ci].label}: ${t(RISK_WORDS[c.risk].en, RISK_WORDS[c.risk].my)}`}
+                        className={`h-4 flex-1 rounded-[3px] transition hover:opacity-80 lg:h-6 lg:w-10 lg:flex-none lg:rounded-[4px] ${CELL[c.risk]} ${
+                          ci === bestIdx ? "ring-1 ring-inset ring-ink/40" : ""
                         } ${pickedYear === yr.year && ci === sel ? "outline outline-2 outline-ink" : ""}`}
                       />
                     ))}
                   </div>
                 ))}
               </div>
-              <div className="mt-1.5 flex items-center text-[10px] text-muted">
+              {/* low-risk count per week (desktop) */}
+              <div className="mt-1.5 hidden items-center gap-1 lg:flex">
+                <span className="w-12 shrink-0 pr-1 text-right text-[10px] text-muted">{t("Low risk", "နည်း")}</span>
+                {cols.map((c, i) => (
+                  <span key={i} className={`w-10 text-center text-xs tabular-nums ${i === bestIdx ? "font-bold text-grass" : "text-muted"}`}>
+                    {c.good}
+                  </span>
+                ))}
+              </div>
+              {/* first / last week (phone) */}
+              <div className="mt-1.5 flex items-center text-[10px] text-muted lg:hidden">
                 <span className="w-8 shrink-0" />
                 <span className="ml-[3px]">{data.weeks[0].label}</span>
                 <span className="flex-1 text-center">{t("← sowing week →", "← စိုက်သည့်အပတ် →")}</span>
                 <span>{data.weeks[data.weeks.length - 1].label}</span>
               </div>
-            </div>
-
-            {/* Desktop: one column per sowing week */}
-            <div className="hidden lg:block">
-            <div className="flex items-baseline justify-between text-xs text-muted">
-              <span>{t(`Seasons (out of ${maxN})`, `ရာသီ (${maxN} ခုအနက်)`)}</span>
-              <span className="hidden sm:inline">{t("Tap a week for details", "အသေးစိတ်အတွက် အပတ်ကို တို့ပါ")}</span>
-            </div>
-
-            <div className="relative mt-2 h-52 lg:h-64">
-              {/* light guide lines at half and full */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 border-t border-dashed border-hair" />
-              <div className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-hair" />
-              <div className="absolute inset-0 flex items-end gap-1 lg:gap-2">
-                {cols.map((c, i) => {
-                  const isBest = i === data.bestWeekIndex;
-                  const isSel = i === sel;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setPicked(i);
-                        setPickedYear(null);
-                      }}
-                      aria-label={`${c.label}: ${c.good} ${RISK_WORDS.good.en}, ${c.watch} ${RISK_WORDS.watch.en}, ${c.alert} ${RISK_WORDS.alert.en}`}
-                      aria-pressed={isSel}
-                      className={`relative flex h-full flex-1 flex-col justify-end rounded-lg px-0.5 pb-0.5 transition ${
-                        isSel ? "bg-ink/[0.06]" : "hover:bg-ink/[0.03]"
-                      }`}
-                    >
-                      {isBest && (
-                        <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded-full bg-grass px-1.5 py-px text-[9px] font-bold text-white lg:text-[10px]">
-                          {t("Best", "အကောင်းဆုံး")}
-                        </span>
-                      )}
-                      <div className="flex flex-col gap-[2px]" style={{ height: `${(c.n / maxN) * 88}%` }}>
-                        {(["alert", "watch", "good"] as const).map((r) =>
-                          c[r] ? (
-                            <div
-                              key={r}
-                              className={`w-full ${CELL[r]} ${r === "alert" || (r === "watch" && !c.alert) || (r === "good" && !c.alert && !c.watch) ? "rounded-t-[4px]" : ""}`}
-                              style={{ flexGrow: c[r] }}
-                            />
-                          ) : null
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Week labels (every other one on small phones) */}
-            <div className="mt-1.5 flex gap-1 lg:gap-2">
-              {cols.map((c, i) => (
-                <span
-                  key={i}
-                  className={`flex-1 text-center text-[9px] leading-tight tabular-nums lg:text-[11px] ${
-                    i === sel ? "font-bold text-ink" : "text-muted"
-                  } ${i % 2 ? "invisible sm:visible" : ""}`}
-                >
-                  {c.label}
-                </span>
-              ))}
-            </div>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
@@ -239,7 +205,7 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
                   <span className={`h-3 w-3 rounded-[3px] ${CELL[r]}`} /> {t(RISK_WORDS[r].en, RISK_WORDS[r].my)}
                 </span>
               ))}
-              <span className="flex items-center gap-1.5 lg:hidden">
+              <span className="flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-[3px] ring-1 ring-inset ring-ink/40" /> {t("Best week", "အကောင်းဆုံးအပတ်")}
               </span>
             </div>

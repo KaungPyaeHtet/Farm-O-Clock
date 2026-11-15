@@ -28,7 +28,9 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
   - UI conventions: **farmer-facing only** — no method/source/"how it's built" text in the app (that lives in `reports/`
     and the pitch deck). Every screen uses `<Screen>` from `components/Screen.tsx` (phone = 1 column, `lg:` = wide
     dashboard, max-w-6xl). Risk words come from `RISK_WORDS` in `lib/ui.ts` (Low / Some / High risk). Show place names,
-    not coordinates. Past seasons: year×week heatmap on phone, per-week stacked columns on desktop.
+    not coordinates. Past seasons: year×week heatmap on all sizes. Sowing weeks are shown as real upcoming dates via
+    `lib/season.ts` (passed weeks greyed; "best" = best week still ahead). No voice/"Listen" and no LLM API (user decisions).
+    Map: Esri imagery + Esri place-name labels, "Use my location", draggable pin. Finished plans → `/api/plans` (Supabase).
     Data fetching goes through `lib/fetchJson.ts` (session cache, so /api/replay is fetched once). EN/မြန်မာ toggle is in the Wizard header.
   - `src/lib/strategies.ts` (heuristic scoring, placeholder for ML) and `src/lib/brief.ts` (template, placeholder for an LLM).
     `types.ts` holds the shared response shapes.

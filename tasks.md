@@ -52,10 +52,15 @@ Detail: `backend/README.md` (API, models, deploy), `reports/README.md` (accuracy
 - [x] Burmese names for every rotation crop
 - [ ] **(you / a native speaker)** Check the less common Burmese crop names in `web/src/lib/strategies.ts` (`CROP_MY`: cover crops, pulses)
 
-## 7. Plan text and voice (P2)
-- [x] Decided: no AI/LLM API in the app. The plan text stays the built-in English/Burmese template (`web/src/lib/brief.ts`)
-- [x] Burmese voice: app detects a phone with no Burmese voice and tells the farmer how to add one
-- [ ] **(you)** Test the Listen button on 2–3 real Android/iPhone handsets in Burmese
+## 7. Plan text (P2)
+- [x] Decided: no AI/LLM API and no "Listen" voice in the app. The plan text is the built-in English/Burmese template (`web/src/lib/brief.ts`)
+- [x] Share picture redesigned: cards (sow date + chance, season, plan, extra water, soil, 3-year tiles, numbered checklist), no emoji
+
+## 7b. Later in the session (2026-11-15)
+- [x] Sowing dates are real future dates ("5 Aug 2027 · in 9 months"); passed weeks greyed; "best" = best week still ahead (`web/src/lib/season.ts`)
+- [x] Past seasons: the year × week heatmap on phone AND desktop (fixed-size squares, week labels, low-risk count per week)
+- [x] Map: country/city/town labels over the satellite photo, "Use my location" button, draggable pin
+- [x] Supabase fully used: `nasa_cache`, `observations`, now also `fields` + `plans` (each finished plan, anonymous, ~100 m) and `model_evals` (scores uploaded)
 
 ## 8. Validation and pitch (P1)
 - [x] Yield ground truth: FAOSTAT national yields → engine stress vs yield Spearman −0.30 (133 site-years), Iowa 2012 caught; recommended-week outcome **not** visible in national yields (`eval/yield_check.py`)

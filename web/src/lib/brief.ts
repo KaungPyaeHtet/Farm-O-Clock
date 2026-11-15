@@ -14,7 +14,6 @@ export type Brief = {
   /** One plain sentence: what the plan is chosen for, and why it helps. */
   why: string;
   checklist: string[];
-  readAloud: string; // flat text for the voice reader
 };
 
 type Bi = { en: string; my: string };
@@ -133,7 +132,6 @@ export function buildBrief(
 
   const headline =
     lang === "en" ? "Your planting plan" : "သင့် စိုက်ပျိုးရေး အစီအစဉ်";
-  const readAloud = [headline, ...body].join(" ");
 
-  return { headline, body, why, checklist, readAloud };
+  return { headline, body, why, checklist };
 }
