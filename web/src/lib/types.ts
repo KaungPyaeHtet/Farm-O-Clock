@@ -11,6 +11,15 @@ export type Metric = {
   label: string;
 };
 
+export type GoalId = "water" | "nitrogen" | "erosion" | "income";
+export type ConstraintId = "no_machinery" | "frost_sensitive";
+
+export type CropGoals = {
+  crop: string | null;
+  goals: GoalId[]; // 1–2 primary goals
+  constraints: ConstraintId[]; // optional
+};
+
 export type EnvData = {
   lat: number;
   lng: number;
@@ -19,5 +28,19 @@ export type EnvData = {
   rainfall: Metric;
   heat: Metric;
   terrain: Metric;
+  source: string;
+};
+
+export type Verdict = "dry" | "normal" | "wet";
+
+export type HistoryData = {
+  lat: number;
+  lng: number;
+  seasonLabel: string;
+  years: number;
+  verdict: Verdict;
+  rainfall: { thisYear: number; normal: number; percentile: number };
+  temperature: { thisYear: number; normal: number; anomaly: number };
+  series: { year: number; rain: number; temp: number; isCurrent: boolean }[];
   source: string;
 };
