@@ -36,3 +36,24 @@ body {
 .leaflet-control-attribution a {
   color: #2f8a3e !important;
 }
+
+/* Season Replay — rows slide in one by one like seasons replaying. */
+@keyframes replayRowIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.replay-row {
+  animation: replayRowIn 0.3s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .replay-row {
+    animation: none;
+    opacity: 1;
+  }
+}

@@ -33,6 +33,18 @@ export type EnvData = {
 
 export type Verdict = "dry" | "normal" | "wet";
 
+export type ReplayRisk = "good" | "watch" | "alert" | "unknown";
+
+export type ReplayData = {
+  lat: number;
+  lng: number;
+  growDays: number;
+  weeks: { label: string; startDoy: number }[];
+  years: { year: number; cells: { risk: ReplayRisk; reason: string }[] }[];
+  bestWeekIndex: number;
+  source: string;
+};
+
 export type HistoryData = {
   lat: number;
   lng: number;
