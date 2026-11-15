@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlarmClock, FlaskConical } from "lucide-react";
 import type { CropGoals, EnvData, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
@@ -46,19 +46,37 @@ export default function Wizard() {
         ? !!cropGoals.crop && cropGoals.goals.length >= 1
         : true;
 
+  // Make the browser/phone back button move between wizard screens instead
+  // of leaving the app. Each screen is a history entry; popstate drives step.
+  useEffect(() => {
+    window.history.replaceState({ focStep: 1 }, "");
+    const onPop = (e: PopStateEvent) => {
+      const s = (e.state as { focStep?: number } | null)?.focStep ?? 1;
+      setStep(s);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  function goToStep(ns: number) {
+    window.history.pushState({ focStep: ns }, "");
+    setStep(ns);
+  }
+
   function next() {
     if (step < LAST_BUILT_STEP) {
-      setStep((s) => s + 1);
+      goToStep(step + 1);
     } else {
       setPin(null);
       setEnv(null);
       setCropGoals({ crop: null, goals: [], constraints: [] });
-      setStep(1);
+      goToStep(1);
     }
   }
 
   function back() {
-    setStep((s) => Math.max(1, s - 1));
+    // Defer to browser history so the in-app Back and device Back agree.
+    window.history.back();
   }
 
   return (
