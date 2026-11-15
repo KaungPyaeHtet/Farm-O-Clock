@@ -10,8 +10,7 @@ import {
 import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-export type LatLng = { lat: number; lng: number };
+import type { LatLng } from "@/lib/types";
 
 // Custom teardrop pin so we don't depend on Leaflet's default marker images
 // (which break under bundlers). Pure inline SVG, green to match the theme.
