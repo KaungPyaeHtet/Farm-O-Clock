@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AlarmClock, Check } from "lucide-react";
-import type { CropGoals, LatLng } from "@/lib/types";
+import type { CropGoals, LatLng, SowPick, WhatIf } from "@/lib/types";
 import type { LandCover } from "@/app/api/landcover/route";
 import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
@@ -26,6 +26,7 @@ const STEPS: { en: string; my: string }[] = [
 ];
 const TOTAL = STEPS.length;
 const EMPTY_GOALS: CropGoals = { crop: null, goals: [], constraints: [] };
+const AS_EXPECTED: WhatIf = { rain: 50, heat: 50 };
 
 export default function Wizard() {
   const { lang, setLang, t } = useLang();
@@ -33,6 +34,10 @@ export default function Wizard() {
   const [pin, setPin] = useState<LatLng | null>(null);
   const [place, setPlace] = useState<string | null>(null);
   const [country, setCountry] = useState<string | null>(null);
+  // One plan state for the whole flow: the chosen sowing week and the what-if weather are used by
+  // the Rotations screen, the final plan, the share card and the saved plan alike.
+  const [sow, setSow] = useState<SowPick | null>(null);
+  const [whatIf, setWhatIf] = useState<WhatIf>(AS_EXPECTED);
 
   // Pin from search → use the searched name; pin from a map tap → look up the nearest place.
   // Every pin (tap, drag, "my location", search) is checked against ESA WorldCover first:
@@ -55,6 +60,7 @@ export default function Wizard() {
     setPin(p);
     setPlace(name ?? null);
     setCountry(null);
+    setSow(null); // a new field has its own sowing weeks
     fetchJson<{ name: string | null; country: string | null }>(`/api/geocode/reverse?lat=${p.lat.toFixed(4)}&lng=${p.lng.toFixed(4)}`)
       .then((d) => {
         if (seq !== pickSeq.current) return;
@@ -104,6 +110,8 @@ export default function Wizard() {
     setPin(null);
     setPlace(null);
     setCropGoals(EMPTY_GOALS);
+    setSow(null);
+    setWhatIf(AS_EXPECTED);
     goToStep(1);
   }
 
@@ -182,9 +190,13 @@ export default function Wizard() {
         {step === 2 && pin && <Screen2Environment pin={pin} place={placeLabel} />}
         {step === 3 && <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />}
         {step === 4 && pin && <SeasonReplay pin={pin} />}
-        {step === 5 && pin && <SowingCalendar pin={pin} />}
-        {step === 6 && <Screen5RotationCompare cropGoals={cropGoals} pin={pin} country={country} />}
-        {step === 7 && <Screen6Guidance pin={pin} place={placeLabel} country={country} cropGoals={cropGoals} />}
+        {step === 5 && pin && <SowingCalendar pin={pin} picked={sow} onPick={setSow} />}
+        {step === 6 && (
+          <Screen5RotationCompare cropGoals={cropGoals} pin={pin} country={country} sow={sow} whatIf={whatIf} onWhatIf={setWhatIf} />
+        )}
+        {step === 7 && (
+          <Screen6Guidance pin={pin} place={placeLabel} country={country} cropGoals={cropGoals} sow={sow} whatIf={whatIf} />
+        )}
       </section>
 
       <footer className="shrink-0 border-t border-hair bg-surface">

@@ -10,7 +10,7 @@ const FILL = -999;
 const WINDOW_DAYS = 90;
 const LATENCY_DAYS = 5;
 const HISTORY_YEARS = 20;
-const MIN_DAYS = 30; // min valid days for a year to count
+const MIN_DAYS = 70; // min valid days (of 90) for a season to count
 
 type Verdict = "dry" | "normal" | "wet";
 
@@ -30,17 +30,19 @@ function ymd(d: Date): string {
   return d.toISOString().slice(0, 10).replace(/-/g, "");
 }
 
-function dayOfYear(d: Date): number {
-  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
-  const diff = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - start;
-  return Math.floor(diff / 86400000);
+const DAY = 86_400_000;
+
+/** Same calendar day `back` years earlier (29 Feb → 28 Feb). */
+function yearsBack(d: Date, back: number): Date {
+  const y = d.getUTCFullYear() - back;
+  const m = d.getUTCMonth();
+  const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m, Math.min(d.getUTCDate(), last)));
 }
 
-function parseKey(k: string) {
-  const year = +k.slice(0, 4);
-  const month = +k.slice(4, 6) - 1;
-  const day = +k.slice(6, 8);
-  return { year, date: new Date(Date.UTC(year, month, day)) };
+/** The 90-day window ending on `end`, as POWER keys (YYYYMMDD). Crosses New Year when it must. */
+function windowKeys(end: Date): string[] {
+  return Array.from({ length: WINDOW_DAYS }, (_, i) => ymd(new Date(end.getTime() - (WINDOW_DAYS - 1 - i) * DAY)));
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -67,17 +69,9 @@ export async function GET(req: NextRequest) {
   end.setUTCDate(end.getUTCDate() - LATENCY_DAYS);
   const start = new Date(end);
   start.setUTCDate(start.getUTCDate() - (WINDOW_DAYS - 1));
-  const fetchStart = new Date(Date.UTC(end.getUTCFullYear() - HISTORY_YEARS, 0, 1));
-
-  const doyStart = dayOfYear(start);
-  const doyEnd = dayOfYear(end);
+  // Oldest window starts 90 days before the same date HISTORY_YEARS ago (may be the previous December).
+  const fetchStart = new Date(yearsBack(end, HISTORY_YEARS).getTime() - WINDOW_DAYS * DAY);
   const currentYear = end.getUTCFullYear();
-  // Season window does not wrap new year for the current real dates; this
-  // handles both the normal and (approx) wrapping case.
-  const inWindow = (doy: number) =>
-    doyStart <= doyEnd
-      ? doy >= doyStart && doy <= doyEnd
-      : doy >= doyStart || doy <= doyEnd;
 
   try {
     const url =
@@ -95,23 +89,26 @@ export async function GET(req: NextRequest) {
     const tempSeries: Record<string, number> =
       json?.properties?.parameter?.T2M ?? {};
 
-    // Bucket in-window days by calendar year.
+    // One complete 90-day window per season, ending on the same date each year (labelled by its end year).
     const byYear: Record<number, { rain: number[]; temp: number[] }> = {};
-    for (const k of Object.keys(rainSeries)) {
-      const { year, date } = parseKey(k);
-      if (!inWindow(dayOfYear(date))) continue;
-      const rain = rainSeries[k];
-      const temp = tempSeries[k];
-      if (rain === FILL || temp === FILL) continue;
-      (byYear[year] ??= { rain: [], temp: [] }).rain.push(rain);
-      byYear[year]!.temp.push(temp);
+    for (let back = 0; back <= HISTORY_YEARS; back++) {
+      const wEnd = yearsBack(end, back);
+      const v = (byYear[wEnd.getUTCFullYear()] = { rain: [] as number[], temp: [] as number[] });
+      for (const k of windowKeys(wEnd)) {
+        const rain = rainSeries[k];
+        const temp = tempSeries[k];
+        if (rain === undefined || temp === undefined || rain === FILL || temp === FILL) continue;
+        v.rain.push(rain);
+        v.temp.push(temp);
+      }
     }
 
     const series = Object.entries(byYear)
       .filter(([, v]) => v.rain.length >= MIN_DAYS)
       .map(([y, v]) => ({
         year: +y,
-        rain: Math.round(v.rain.reduce((a, b) => a + b, 0)), // seasonal total mm
+        // seasonal total mm, scaled to the full window if a few days are missing
+        rain: Math.round((v.rain.reduce((a, b) => a + b, 0) * WINDOW_DAYS) / v.rain.length),
         temp: Math.round(mean(v.temp) * 10) / 10,
         isCurrent: +y === currentYear,
       }))

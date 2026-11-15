@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Sun, Waves, Thermometer, CalendarCheck, type LucideIcon } from "lucide-react";
-import type { LatLng, ReplayData, ReplayRisk } from "@/lib/types";
+import type { LatLng, ReplayData, ReplayRisk, SowPick } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
 import { card, RISK_WORDS, STATUS_PILL } from "@/lib/ui";
@@ -47,11 +47,18 @@ function RiskBar({ Icon, label, value }: { Icon: LucideIcon; label: string; valu
   );
 }
 
-export default function SowingCalendar({ pin }: { pin: LatLng }) {
+export default function SowingCalendar({
+  pin,
+  picked: pickedProp,
+  onPick,
+}: {
+  pin: LatLng;
+  picked: SowPick | null;
+  onPick: (p: SowPick) => void;
+}) {
   const { t } = useLang();
   const [data, setData] = useState<ReplayData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [picked, setPicked] = useState<number | null>(null);
   const [now] = useState(() => Date.now()); // read the clock once, not on every render
 
   useEffect(() => {
@@ -67,7 +74,12 @@ export default function SowingCalendar({ pin }: { pin: LatLng }) {
   // Real dates for the current/next season; best = best week that is still ahead.
   const dates = useMemo(() => (data ? seasonDates(data.weeks) : []), [data]);
   const best = data ? bestUpcoming(dates, (i) => data.weekAgg[i].chance ?? data.weekAgg[i].goodCount / 20) : 0;
-  const sel = picked ?? best;
+  const sel = pickedProp && data && pickedProp.idx < data.weeks.length ? pickedProp.idx : best;
+  // Report the shown week (the default "best" too) so the rest of the plan uses exactly this date.
+  useEffect(() => {
+    if (data && (pickedProp?.idx !== sel || pickedProp?.doy !== data.weeks[sel].startDoy))
+      onPick({ idx: sel, doy: data.weeks[sel].startDoy });
+  }, [data, sel, pickedProp, onPick]);
   const agg = data?.weekAgg[sel];
   const selLevel: ReplayRisk = data && agg ? weekLevel(agg, data.years.length) : "unknown";
   // High-risk seasons for this week in the grid's 20 seasons (shown as the "usual" in the outlook card).
@@ -156,7 +168,7 @@ export default function SowingCalendar({ pin }: { pin: LatLng }) {
                 max={data.weeks.length - 1}
                 step={1}
                 value={sel}
-                onChange={(e) => setPicked(+e.target.value)}
+                onChange={(e) => data && onPick({ idx: +e.target.value, doy: data.weeks[+e.target.value].startDoy })}
                 aria-label={t("Sowing date", "စိုက်ရက်")}
                 className="sow-pin absolute inset-0 h-full w-full"
               />

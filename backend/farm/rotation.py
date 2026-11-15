@@ -19,6 +19,8 @@ from farm import replay as R
 from farm.water import CROPS, effective_rain_daily, et0_hargreaves, kc_curve
 
 DROUGHT_CANDIDATES = ["sorghum", "millet", "chickpea", "pigeon pea", "cowpea"]
+FROST_C = 2.0  # daily mean °C at or below this ≈ a frost night
+FROST_MAX = 0.1  # frost-sensitive field: avoid crops whose season met frost in > 1 of 10 years
 LEGUME_CANDIDATES = ["mung bean", "cowpea", "soybean", "lentil", "chickpea", "field pea", "clover (cover)", "sunn hemp (cover)"]
 
 # The old fixed table (web/src/lib/strategies.ts), kept for comparison in eval/partner_eval.py.
@@ -109,26 +111,39 @@ def crop_stats(f: Field, crop: str, weeks: list[int], week_idx: int, base: list[
         if 0 <= i and i + len(kc) <= len(f.tmean):
             temps.append(np.nanmean(f.tmean[i:i + len(kc)]))
     t = float(np.mean(temps)) if temps else None
+    # Frost proxy: a day with daily MEAN temperature ≤ 2 °C almost always has a frost night.
+    frosty = []
+    for y in ys:
+        i = f.idx(date(y, 1, 1) + timedelta(days=d - 1))
+        if 0 <= i and i + len(kc) <= len(f.tmean):
+            seg = f.tmean[i:i + len(kc)]
+            if np.isfinite(seg).any():
+                frosty.append(bool(np.nanmin(seg) <= FROST_C))
+    frost = float(np.mean(frosty)) if frosty else None
     lo, hi = TEMP_OPT.get(crop, (-99, 99))
     off = 0.0 if t is None else max(0.0, lo - t, t - hi)  # °C outside the optimal range
     return {"crop": crop, "low_risk": good / n if n else None, "seasons": n,
             "irrigation_mm": float(np.mean(irr)) if irr else None, "days": len(kc),
-            "season_temp_c": None if t is None else round(t, 1), "temp_off_c": round(off, 1)}
+            "season_temp_c": None if t is None else round(t, 1), "temp_off_c": round(off, 1),
+            "frost_share": None if frost is None else round(frost, 2)}
 
 
-def utility(s: dict, kind: str) -> float:
+def utility(s: dict, kind: str, frost_sensitive: bool = False) -> float:
     """Water plan: 100 mm extra water ≈ 10 points of low-risk share. Soil plan: water matters half as much.
-    Each °C the season is outside the crop's optimal temperature costs 10 points."""
+    Each °C the season is outside the crop's optimal temperature costs 10 points.
+    Frost-sensitive field: a crop whose season met frost in > FROST_MAX of past years goes to the bottom."""
     if s["low_risk"] is None or s["irrigation_mm"] is None:
         return -1e9
-    return 100 * s["low_risk"] - s["irrigation_mm"] / (10 if kind == "water" else 20) - 10 * s.get("temp_off_c", 0)
+    frost_pen = 1e6 if frost_sensitive and (s.get("frost_share") or 0) > FROST_MAX else 0
+    return -frost_pen + 100 * s["low_risk"] - s["irrigation_mm"] / (10 if kind == "water" else 20) - 10 * s.get("temp_off_c", 0)
 
 
-def pick_partners(f: Field, main: str, weeks: list[int], week_idx: int, base: list[int]) -> dict:
+def pick_partners(f: Field, main: str, weeks: list[int], week_idx: int, base: list[int],
+                  frost_sensitive: bool = False) -> dict:
     out = {}
     for kind, cands in (("water", DROUGHT_CANDIDATES), ("soil", LEGUME_CANDIDATES)):
         stats = [crop_stats(f, c, weeks, week_idx, base) for c in cands if c != main and c in CROPS]
-        stats.sort(key=lambda s: utility(s, kind), reverse=True)
+        stats.sort(key=lambda s: utility(s, kind, frost_sensitive), reverse=True)
         pick = stats[0]["crop"]
         if kind == "soil" and pick == out["water"]["pick"] and len(stats) > 1:
             pick = stats[1]["crop"]  # keep the two plans different (next-best legume)

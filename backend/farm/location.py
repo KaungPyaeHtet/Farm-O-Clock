@@ -41,7 +41,9 @@ class Location:
             raise ValueError("Not enough NASA POWER data for this location")
         self.data_end: pd.Timestamp = valid.index.max()
         self.year = self.data_end.year
-        self.base = list(range(self.year - BASE_YEARS, self.year))
+        # Same 20 calendar years as the web replay grid (current year included; its sowing windows
+        # count only once complete — window_metrics returns None for missing data).
+        self.base = list(range(self.year - BASE_YEARS + 1, self.year + 1))
         self.rain, self.tmax = self.df["PRECTOTCORR"], self.df["T2M_MAX"]
         self.weeks = R.candidate_weeks(self.rain, list(range(R.CLIM_START_YEAR, self.year + 1)))
         wins = [R.window_metrics(self.rain, self.tmax, y, d) for y in self.base for d in self.weeks]

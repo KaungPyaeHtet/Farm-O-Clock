@@ -85,6 +85,9 @@ begin
         (new.soil_moisture = 'dry'     and sat_wet > 0.9)) then
     new.status := 'pending';
     new.status_reason := 'disagrees with satellite — needs review';
+  elsif new.soil_moisture is not null and sat_wet is null then
+    new.status := 'pending';
+    new.status_reason := 'no satellite reading to check against';
   elsif new.soil_moisture is not null then
     new.status := 'validated';
     new.status_reason := 'consistent with satellite range';

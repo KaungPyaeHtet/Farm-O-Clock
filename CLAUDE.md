@@ -57,6 +57,7 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
 ## Commands
 
 - Web: `cd web && npm install && npm run dev`
+- Web tests: `cd web && npm test` (history windows, constraints, coordinate checks)
 - Python: `cd backend && .venv/bin/python -m pytest` and `.venv/bin/python -m eval.run_eval` (~30 s when cached)
 
 ## Data
@@ -70,6 +71,15 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
 ## Known issues (see backend/eval/REPORT.md)
 
 - AI use is declared in `AI_DECLARATION.md` (keep it up to date).
+- Audit fixes 2026-11-15 (report: `farm-oclock-audit.html`): Wizard owns one plan state (`sow` week + `whatIf` sliders +
+  constraints) used by Rotations, the plan, share card and save. `frost_sensitive` → `/v1/rotation` drops partner crops
+  with frost (daily mean ≤ 2 °C) in > 1 of 10 seasons; `no_machinery` → −10 goal fit for plans adding a new crop + checklist.
+  `history` compares equal 90-day windows by date (crosses New Year; `web/tests/history.test.ts`). Python `Location.base`
+  = same 20 years as the web grid (current year included). Soil/NDVI cache cells are ~100 m (`withNasaCache(..., {cell})`);
+  soil falls back to the last known result with its date. Observations: satellite value fetched server-side, ≤ 3/day per
+  spot, reports capped at 3:1 vs satellite. POST bodies need numeric lat/lng (`lib/validate.ts`). Plan saves are
+  idempotent (`saveId`) and show saved/failed + retry. Web tests: `cd web && npm test`.
+- npm audit: 9 moderate dev-only advisories (minimatch via typescript-eslint 8.72.2, no fix released yet); production deps clean.
 - Fixed 2026-11-15: `api/replay` percentile ties bug (cool/arid sites were 100 % "alert"). TS and Python both use mid-rank pct, pH=0 if no hot days.
 - Raw "k of 20 seasons" confidence is over-confident above 0.6. Rain/Heat sliders only affect strategy cards, not the risk grid.
 - Outlook probabilities are only shown for sowing ≤ 30 days after the latest NASA data (model trained on pre-sowing conditions);

@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
-import type { CropGoals, LatLng } from "@/lib/types";
+import type { CropGoals, LatLng, SowPick, WhatIf } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
-import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type RotationApi, inputsFromRotation, type ScoredStrategy } from "@/lib/strategies";
+import { cropLabel, rotationUrl, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type RotationApi, inputsFromRotation, type ScoredStrategy } from "@/lib/strategies";
 import { fetchJson } from "@/lib/fetchJson";
 import type { EnvData, SoilData } from "@/lib/types";
 import { card } from "@/lib/ui";
@@ -109,18 +109,36 @@ function StrategyCard({ s, whatIf }: { s: ScoredStrategy; whatIf: boolean }) {
   );
 }
 
-export default function Screen5RotationCompare({ cropGoals, pin, country }: { cropGoals: CropGoals; pin: LatLng | null; country: string | null }) {
+export default function Screen5RotationCompare({
+  cropGoals,
+  pin,
+  country,
+  sow,
+  whatIf,
+  onWhatIf,
+}: {
+  cropGoals: CropGoals;
+  pin: LatLng | null;
+  country: string | null;
+  sow: SowPick | null;
+  whatIf: WhatIf;
+  onWhatIf: (w: WhatIf) => void;
+}) {
   const { t } = useLang();
-  const [rain, setRain] = useState(50);
-  const [heat, setHeat] = useState(50);
+  // The sliders live in the Wizard so the final plan uses the same what-if.
+  const { rain, heat } = whatIf;
+  const setRain = (v: number) => onWhatIf({ ...whatIf, rain: v });
+  const setHeat = (v: number) => onWhatIf({ ...whatIf, heat: v });
   const [inputs, setInputs] = useState<FieldInputs>({});
+  const [soilDown, setSoilDown] = useState(false);
+  const frost = cropGoals.constraints.includes("frost_sensitive");
 
   // Measured field inputs (optional): FAO-56 water per plan + SoilGrids soil health.
   useEffect(() => {
     if (!pin) return;
     let active = true;
     const crop = cropGoals.crop ?? "rice";
-    fetchJson<RotationApi>(`/api/rotation?lat=${pin.lat}&lng=${pin.lng}&crop=${crop}`)
+    fetchJson<RotationApi>(rotationUrl(pin, crop, sow, frost))
       .then((d) => active && setInputs((i) => ({ ...i, ...inputsFromRotation(d) })))
       .catch(() => {});
     fetchJson<EnvData>(`/api/environment?lat=${pin.lat}&lng=${pin.lng}`)
@@ -128,18 +146,18 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
       .catch(() => {});
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health, soilTex: { sand: d.sand, silt: d.silt, clay: d.clay, soc: d.soc } })))
-      .catch(() => {});
+      .catch(() => active && setSoilDown(true));
     return () => {
       active = false;
     };
-  }, [pin, cropGoals.crop]);
+  }, [pin, cropGoals.crop, sow, frost]);
 
   const strategies = useMemo(
     () =>
-      scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, { ...inputs, country }).sort(
+      scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, { ...inputs, country, constraints: cropGoals.constraints }).sort(
         (a, b) => Number(b.isBest) - Number(a.isBest) || b.goalFit - a.goalFit || b.overall - a.overall
       ),
-    [cropGoals.crop, cropGoals.goals, rain, heat, inputs, country]
+    [cropGoals.crop, cropGoals.goals, cropGoals.constraints, rain, heat, inputs, country]
   );
 
   function sliderLabel(kind: "rain" | "heat", v: number): string {
@@ -211,6 +229,14 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
           <StrategyCard key={s.id} s={s} whatIf={rain !== 50 || heat !== 50} />
         ))}
       </div>
+      {soilDown && (
+        <p className="mt-3 text-xs text-[#9a6a0c]">
+          {t(
+            "Soil map is unavailable right now, so the Soil ratings use typical values, not your field's soil.",
+            "မြေဆီလွှာ မြေပုံ ယခု မရနိုင်ပါ။ ထို့ကြောင့် မြေ အဆင့်များသည် သင့်လယ်၏ မြေ မဟုတ်ဘဲ ပုံမှန်တန်ဖိုးများ ဖြစ်သည်။"
+          )}
+        </p>
+      )}
     </Screen>
   );
 }

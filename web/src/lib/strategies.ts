@@ -6,7 +6,7 @@
 // model — keep the same scoreStrategies(...) signature so it can be
 // swapped in without touching the UI.
 
-import type { GoalId } from "./types";
+import type { ConstraintId, GoalId } from "./types";
 import { soilLoss } from "./erosion";
 import { rotationIncome } from "./economics";
 
@@ -100,10 +100,34 @@ export type FieldInputs = {
   soilTex?: { sand: number; silt: number; clay: number; soc: number };
   /** ISO-2 country for FAO yields x prices (income) */
   country?: string | null;
+  /** Farmer constraints from step 3. no_machinery: a plan that adds a new crop scores lower (it may need
+   *  a different planter/thresher). frost_sensitive is applied when the partner crops are picked (/api/rotation). */
+  constraints?: ConstraintId[];
 };
+
+/** "30% less rain · +2.4°C hotter" for the what-if sliders (null when both are as expected). */
+export function whatIfLabel(rain: number, heat: number, t: (en: string, my: string) => string): string | null {
+  const pct = Math.round(rain - 50);
+  const d = Math.round(((heat - 50) / 50) * 6 * 10) / 10;
+  const parts: string[] = [];
+  if (pct) parts.push(pct < 0 ? `${-pct}% ${t("less rain", "မိုးနည်း")}` : `${pct}% ${t("more rain", "မိုးများ")}`);
+  if (d) parts.push(d > 0 ? `+${d}°C ${t("hotter", "ပိုပူ")}` : `${d}°C ${t("cooler", "ပိုအေး")}`);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+/** /api/rotation URL for this pin, crop, chosen sowing week and frost constraint. */
+export function rotationUrl(
+  pin: { lat: number; lng: number },
+  crop: string,
+  sow: { doy: number } | null,
+  frost: boolean
+): string {
+  return `/api/rotation?lat=${pin.lat}&lng=${pin.lng}&crop=${crop}${sow ? `&doy=${sow.doy}` : ""}${frost ? "&frost=1" : ""}`;
+}
 
 /** Shape of /api/rotation → FieldInputs. */
 export type RotationApi = {
+  main_frost_share?: number | null;
   plans: Record<StrategyId, { rotation: string[]; water: { need_mm: number; effective_rain_mm: number; irrigation_mm: number }; low_risk_share: number | null }>;
 };
 export function inputsFromRotation(r: RotationApi): FieldInputs {
@@ -191,9 +215,10 @@ export function scoreStrategies(
       erosion: lossOf(meta[id].rotation) != null ? clamp(100 - lossOf(meta[id].rotation)! * 4.5 - dry * 10) : clamp(p.erosion * 100 - dry * 10),
       income: incomeScore(meta[id].rotation) ?? p.income,
     };
-    const goalFit = goals.length
-      ? clamp(goals.reduce((a, g) => a + goalMetric[g], 0) / goals.length)
-      : overall;
+    const toolsPenalty = inputs.constraints?.includes("no_machinery") && id !== "baseline" ? 10 : 0;
+    const goalFit = clamp(
+      (goals.length ? goals.reduce((a, g) => a + goalMetric[g], 0) / goals.length : overall) - toolsPenalty
+    );
 
     // Soil-health trajectory over 3 years. Baseline (monocrop) degrades;
     // the legume/cover-crop option rebuilds soil year on year.

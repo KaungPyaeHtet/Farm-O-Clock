@@ -3,7 +3,7 @@ import { callBackend, latLng } from "@/lib/backend";
 import { withNasaCache } from "@/lib/supabase";
 import type { VegetationData } from "@/lib/types";
 
-// Field greenness (MODIS NDVI via the Python API). Cached 7 days per ~0.1° cell.
+// Field greenness (MODIS NDVI via the Python API). Cached 7 days per ~100 m cell (250 m pixels).
 export const maxDuration = 120;
 
 export async function GET(req: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   if (!p) return NextResponse.json({ error: "lat and lng query params are required" }, { status: 400 });
   try {
     const data = await withNasaCache<VegetationData>("ndvi", p.lat, p.lng, 24 * 7, () =>
-      callBackend<VegetationData>("/v1/vegetation", p)
+      callBackend<VegetationData>("/v1/vegetation", p), { cell: 0.001 }
     );
     return NextResponse.json(data);
   } catch (e) {

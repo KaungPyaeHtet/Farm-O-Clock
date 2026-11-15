@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json tests/history.test.ts && tsx --tsconfig tsconfig.json tests/rules.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
@@ -28,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

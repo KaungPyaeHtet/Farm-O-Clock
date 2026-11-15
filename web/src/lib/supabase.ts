@@ -15,17 +15,27 @@ export function supabase(): SupabaseClient | null {
   return client;
 }
 
-/** Cache a NASA computation per ~0.1° cell. Falls through if no DB. */
+export type CacheOpts = {
+  /** Cell size in degrees. 0.1 (~11 km, default) suits NASA POWER (0.5° grid); use 0.001 (~100 m)
+   *  for 250 m products (SoilGrids, MODIS) so neighbouring farms never share a result. */
+  cell?: number;
+  /** If the source fails, return the last cached payload even if expired, and report its date. */
+  staleOnError?: (fetchedAt: string) => void;
+};
+
+/** Cache a computation per grid cell. Falls through if no DB. */
 export async function withNasaCache<T>(
   endpoint: string,
   lat: number,
   lng: number,
   ttlHours: number,
-  compute: () => Promise<T>
+  compute: () => Promise<T>,
+  opts: CacheOpts = {}
 ): Promise<T> {
   const db = supabase();
-  const latCell = Math.round(lat * 10) / 10;
-  const lngCell = Math.round(lng * 10) / 10;
+  const per = Math.round(1 / (opts.cell ?? 0.1));
+  const latCell = Math.round(lat * per) / per;
+  const lngCell = Math.round(lng * per) / per;
   const key = `${endpoint}:${latCell}:${lngCell}`;
   if (db) {
     const { data } = await db
@@ -36,7 +46,19 @@ export async function withNasaCache<T>(
       .maybeSingle();
     if (data?.payload) return data.payload as T;
   }
-  const payload = await compute();
+  let payload: T;
+  try {
+    payload = await compute();
+  } catch (e) {
+    if (db && opts.staleOnError) {
+      const { data } = await db.from("nasa_cache").select("payload, fetched_at").eq("key", key).maybeSingle();
+      if (data?.payload) {
+        opts.staleOnError(data.fetched_at as string);
+        return data.payload as T;
+      }
+    }
+    throw e;
+  }
   if (db) {
     await db.from("nasa_cache").upsert({
       key,
