@@ -21,7 +21,10 @@ design decision, checked the results, and takes responsibility for the submitted
 | Tool | What we used it for | How we checked it |
 |---|---|---|
 | Claude Code (Anthropic, Claude models): AI coding assistant | Writing and fixing code (Next.js web app, Python API, evaluation scripts), finding bugs, writing docs (README, reports), and help with the Burmese UI text | Team code review, automated tests (`pytest`, incl. TS ↔ Python parity), lint and type checks, backtests against 20+ years of NASA data, and manual testing of the live app |
-| _Add any other tool the team used (e.g. ChatGPT, Gemini, Copilot, AI image/voice tools)_ | _…_ | _…_ |
+| ChatGPT (OpenAI) | Text drafting (pitch script, submission text, explanations), image generation, help planning the demo video | The team edited all text and checked facts and numbers against our own results |
+| Claude (Anthropic, chat) | Text drafting and editing, image generation, help with the video | Same as above |
+| Gemini (Google) | Text drafting, image generation, help with the video | Same as above |
+| Grok (xAI) | Creating the Farm O'Clock logo | The team chose and approved the final design |
 
 What the team did itself: choosing the problem and users, the app flow and features, which data sources to use,
 the decision not to use an LLM in the app, reviewing and testing all AI-assisted code, and checking the Burmese text.
@@ -29,7 +32,12 @@ the decision not to use an LLM in the app, reviewing and testing all AI-assisted
 ## 3. Images, video and presentation
 
 - App map imagery is Esri satellite tiles; charts in `reports/figures/` are generated from our own evaluation code.
-- _State here whether any image, logo, video, voice-over or slide in the pitch deck/video was AI-generated (and with which tool). If none, write "No AI-generated images, video or audio were used."_
+- **Logo:** made with Grok (xAI).
+- **Images in the pitch deck / video:** some were generated with ChatGPT, Claude and Gemini. They are illustrations only and
+  are **not** satellite data or real photos of farms. All real data in the app and the charts come from the sources in section 4.
+- **Video:** AI tools (ChatGPT, Claude, Gemini) helped with planning and scripting; the team recorded, edited and narrated it,
+  and the app screen recordings are real.
+- **Text:** AI helped draft and edit text (pitch, submission, docs); the team reviewed every word and all numbers come from our own evaluations.
 - We do not use NASA logos or imply NASA endorsement.
 
 ## 4. Data
@@ -37,7 +45,5 @@ the decision not to use an LLM in the app, reviewing and testing all AI-assisted
 All data is open and credited: NASA POWER, NASA SRTM, NASA MODIS NDVI (via Microsoft Planetary Computer),
 SoilGrids (ISRIC), ESA WorldCover, Open-Meteo, FAOSTAT, OpenStreetMap Nominatim, Esri.
 No AI-generated or synthetic data is shown to farmers as real measurements.
-
-_Team: fill in the blanks in sections 2 and 3, then sign._
 
 Signed, Farm O'Clock team — 15 November 2026
