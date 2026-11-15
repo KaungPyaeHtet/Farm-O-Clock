@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, type LucideIcon } from "lucide-react";
+import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
 import type { CropGoals, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type RotationApi, inputsFromRotation, type ScoredStrategy } from "@/lib/strategies";
@@ -171,7 +171,7 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
       <div className={`mt-3 md:mt-0 md:flex md:flex-col md:justify-center ${card} p-4 lg:p-6`}>
         <div className="mb-3">
           <span className="inline-flex items-center rounded-full bg-water/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-water">
-            {t("What if…?", "ဖြစ်ခဲ့လျှင်…?")}
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> {t("What if…?", "ဖြစ်ခဲ့လျှင်…?")}
           </span>
           <p className="mt-1 text-xs text-muted">
             {t("Pretend weather, not a forecast. Move to test your plans.", "ခန့်မှန်းချက် မဟုတ်ပါ၊ စမ်းကြည့်ရန်သာ။ ရွှေ့ပြီး အစီအစဉ်များကို စမ်းပါ။")}

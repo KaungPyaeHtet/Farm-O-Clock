@@ -220,15 +220,22 @@ export function scoreStrategies(
     };
   });
 
-  // Mark the best fit for the farmer's goals (ties broken by overall). When the what-if
-  // sliders move away from "as expected", coping with that weather counts more (up to 80 % at the slider ends).
+  // Mark the best plan. Order: goal fit (shifted toward weather resilience when the what-if
+  // sliders move — up to 80 % at the slider ends), then goal intent (Save Water → the water
+  // plan; goalFit ties a lot in wet rice regions), then overall.
   const shift = 0.8 * Math.min(1, Math.max(Math.abs(dryness), Math.abs(heatX)));
   const pickScore = (s: (typeof scored)[number]) => s.goalFit * (1 - shift) + s.resilience * shift;
+  const GOAL_HOME: Record<GoalId, StrategyId> = {
+    water: "water",
+    nitrogen: "soil",
+    erosion: "soil",
+    income: "baseline",
+  };
+  const intent = (id: StrategyId) => goals.filter((g) => GOAL_HOME[g] === id).length;
   let best = scored[0];
   for (const s of scored) {
-    if (pickScore(s) > pickScore(best) || (pickScore(s) === pickScore(best) && s.overall > best.overall)) {
-      best = s;
-    }
+    const d = pickScore(s) - pickScore(best) || intent(s.id) - intent(best.id) || s.overall - best.overall;
+    if (d > 0) best = s;
   }
   best.isBest = true;
 
