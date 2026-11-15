@@ -3,7 +3,8 @@ import { withNasaCache } from "@/lib/supabase";
 import type { SoilData } from "@/lib/types";
 
 // Soil at the pin from ISRIC SoilGrids (250 m, global, no key), top 30 cm.
-// Cached 30 days per ~0.1° cell (soil doesn't change).
+// Cached 30 days per ~100 m cell. If SoilGrids is down, the last known result is returned with its date.
+export const maxDuration = 60;
 
 const PROPS = ["clay", "sand", "silt", "soc", "phh2o"] as const;
 const DEPTHS = [
@@ -21,7 +22,7 @@ async function query(lat: number, lng: number): Promise<Record<string, number> |
     "&" +
     DEPTHS.map((d) => `depth=${d.label}`).join("&");
   const res = await fetch(`https://rest.isric.org/soilgrids/v2.0/properties/query?${qs}`, {
-    signal: AbortSignal.timeout(25_000),
+    signal: AbortSignal.timeout(12_000),
   });
   if (!res.ok) throw new Error(`SoilGrids ${res.status}`);
   const layers = ((await res.json())?.properties?.layers ?? []) as Layer[];
@@ -64,11 +65,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "lat and lng query params are required" }, { status: 400 });
   }
   try {
+    let asOf: string | undefined;
     const body = await withNasaCache<SoilData>("soilgrids", lat, lng, 24 * 30, async () => {
-      // Try the pin, then nearby points if it falls on a masked pixel.
+      // One retry if SoilGrids errors or times out (bounded: 2 × 12 s), then give up.
+      const tryQuery = async (a: number, b: number) => {
+        try {
+          return await query(a, b);
+        } catch {
+          return await query(a, b);
+        }
+      };
+      // Try the pin, then nearby points only if it falls on a masked pixel (an outage throws instead).
       let raw: Record<string, number> | null = null;
       for (const [dy, dx] of [[0, 0], [0.01, 0], [0, 0.01], [-0.01, 0], [0, -0.01]]) {
-        raw = await query(lat + dy, lng + dx);
+        raw = await tryQuery(lat + dy, lng + dx);
         if (raw) break;
       }
       if (!raw) throw new Error("No soil data at this spot");
@@ -86,8 +96,8 @@ export async function GET(req: NextRequest) {
         soc: Math.round(soc * 10) / 10, ph: Math.round(ph * 10) / 10,
         organic, phLevel, health: Math.round(0.6 * socScore + 0.4 * phScore),
       } satisfies SoilData;
-    });
-    return NextResponse.json(body);
+    }, { cell: 0.001, staleOnError: (d) => (asOf = d) });
+    return NextResponse.json(asOf ? { ...body, asOf } : body);
   } catch (err) {
     return NextResponse.json({ error: `Soil data unavailable: ${(err as Error).message}` }, { status: 502 });
   }

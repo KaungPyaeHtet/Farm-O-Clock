@@ -23,7 +23,7 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
     `observations` (farmer reports → Supabase), `geocode/reverse` (pin → "Town, Region, Country"),
     `outlook` + `scenario` + `vegetation` + `rotation` (Python API via `lib/backend.ts`; 503 → UI hides those panels),
     `landcover` (ESA WorldCover: pins on water are refused, built-up gets a warning), `plans` (save finished plans),
-    `soil` (SoilGrids). The plan text is a fixed template (`lib/brief.ts`); the user chose NOT to use any LLM/AI API. Calibrated "N in 10" chance:
+    `soil` (SoilGrids), `warm` (wakes the Python API when the app opens). The plan text is a fixed template (`lib/brief.ts`); the user chose NOT to use any LLM/AI API. Calibrated "N in 10" chance:
     `lib/confidence.ts` + `lib/confidence-curve.json` (copied from `backend/models/confidence_curve.json` — keep in sync).
     `replay`/`history` cache raw POWER pulls in Supabase via `withNasaCache`.
   - UI conventions: **farmer-facing only** — no method/source/"how it's built" text in the app (that lives in `reports/`
@@ -57,22 +57,37 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
 ## Commands
 
 - Web: `cd web && npm install && npm run dev`
+- Web tests: `cd web && npm test` (history windows, constraints, coordinate checks)
 - Python: `cd backend && .venv/bin/python -m pytest` and `.venv/bin/python -m eval.run_eval` (~30 s when cached)
 
 ## Data
 
 - **In use:** NASA POWER daily point API (`community=AG`; `PRECTOTCORR`, `T2M`, `T2M_MAX`, `GWETTOP`, `GWETROOT`; fill = -999,
-  ~5-day latency), SRTM 30 m, Nominatim.
-- **Not yet used:** SMAP, GPM IMERG, ECOSTRESS, MODIS/Landsat NDVI, GRACE, OpenET, SoilGrids, crop/market stats.
+  ~5-day latency), SRTM 30 m (OpenTopoData), MODIS Terra NDVI MOD13Q1 (Planetary Computer; needs ≥ 12 clear views in 4 yrs,
+  else 422 and the card is hidden), SoilGrids, ESA WorldCover, Open-Meteo seasonal forecast, FAOSTAT yields/prices
+  (`lib/crop-economics.json`), Nominatim + Esri map tiles.
+- **Not yet used:** SMAP, GPM IMERG, ECOSTRESS, Landsat, GRACE, OpenET, market prices beyond FAOSTAT.
 
 ## Known issues (see backend/eval/REPORT.md)
 
+- AI use is declared in `AI_DECLARATION.md` (keep it up to date).
+- Audit fixes 2026-11-15 (report: `farm-oclock-audit.html`): Wizard owns one plan state (`sow` week + `whatIf` sliders +
+  constraints) used by Rotations, the plan, share card and save. `frost_sensitive` → `/v1/rotation` drops partner crops
+  with frost (daily mean ≤ 2 °C) in > 1 of 10 seasons; `no_machinery` → −10 goal fit for plans adding a new crop + checklist.
+  `history` compares equal 90-day windows by date (crosses New Year; `web/tests/history.test.ts`). Python `Location.base`
+  = same 20 years as the web grid (current year included). Soil/NDVI cache cells are ~100 m (`withNasaCache(..., {cell})`);
+  soil falls back to the last known result with its date. Observations: satellite value fetched server-side, ≤ 3/day per
+  spot, reports capped at 3:1 vs satellite. POST bodies need numeric lat/lng (`lib/validate.ts`). Plan saves are
+  idempotent (`saveId`) and show saved/failed + retry. Web tests: `cd web && npm test`.
+- npm audit: 9 moderate dev-only advisories (minimatch via typescript-eslint 8.72.2, no fix released yet); production deps clean.
 - Fixed 2026-11-15: `api/replay` percentile ties bug (cool/arid sites were 100 % "alert"). TS and Python both use mid-rank pct, pH=0 if no hot days.
 - Raw "k of 20 seasons" confidence is over-confident above 0.6. Rain/Heat sliders only affect strategy cards, not the risk grid.
 - Outlook probabilities are only shown for sowing ≤ 30 days after the latest NASA data (model trained on pre-sowing conditions);
-  30 days–6 months uses the Open-Meteo seasonal forecast (unvalidated). Drought model has no skill on unseen regions (E6).
+  30 days–~4 months (forecast reach, `seasonal_forecast.max_lead_days`) uses the Open-Meteo seasonal forecast (unvalidated);
+  further out, OutlookCard shows the usual outcome + the dates when the forecast and full check arrive. Drought model has no skill on unseen regions (E6).
 - Engine = v1.1 + candidate weeks from the 1985+ record + window sums rounded to 0.01 mm. Change TS and Python together.
-- Rotation scores (`strategies.ts`) and brief (`brief.ts`) are still heuristics/templates. Lint: one pre-existing error in `Screen1Map.tsx`.
+- Rotation scores (`strategies.ts`) and brief (`brief.ts`) are still heuristics/templates. Moving the what-if sliders shifts the
+  "best" pick toward weather resilience (up to 80 % at the slider ends); at 50/50 it is the goal fit only. Lint is clean.
 
 ## Conventions
 

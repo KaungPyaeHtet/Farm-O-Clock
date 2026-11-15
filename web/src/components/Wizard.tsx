@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlarmClock, Check } from "lucide-react";
-import type { CropGoals, LatLng } from "@/lib/types";
+import { Check } from "lucide-react";
+import Logo from "./Logo";
+import type { CropGoals, LatLng, SowPick, WhatIf } from "@/lib/types";
 import type { LandCover } from "@/app/api/landcover/route";
 import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
@@ -26,6 +27,7 @@ const STEPS: { en: string; my: string }[] = [
 ];
 const TOTAL = STEPS.length;
 const EMPTY_GOALS: CropGoals = { crop: null, goals: [], constraints: [] };
+const AS_EXPECTED: WhatIf = { rain: 50, heat: 50 };
 
 export default function Wizard() {
   const { lang, setLang, t } = useLang();
@@ -33,6 +35,10 @@ export default function Wizard() {
   const [pin, setPin] = useState<LatLng | null>(null);
   const [place, setPlace] = useState<string | null>(null);
   const [country, setCountry] = useState<string | null>(null);
+  // One plan state for the whole flow: the chosen sowing week and the what-if weather are used by
+  // the Rotations screen, the final plan, the share card and the saved plan alike.
+  const [sow, setSow] = useState<SowPick | null>(null);
+  const [whatIf, setWhatIf] = useState<WhatIf>(AS_EXPECTED);
 
   // Pin from search → use the searched name; pin from a map tap → look up the nearest place.
   // Every pin (tap, drag, "my location", search) is checked against ESA WorldCover first:
@@ -55,6 +61,7 @@ export default function Wizard() {
     setPin(p);
     setPlace(name ?? null);
     setCountry(null);
+    setSow(null); // a new field has its own sowing weeks
     fetchJson<{ name: string | null; country: string | null }>(`/api/geocode/reverse?lat=${p.lat.toFixed(4)}&lng=${p.lng.toFixed(4)}`)
       .then((d) => {
         if (seq !== pickSeq.current) return;
@@ -71,7 +78,7 @@ export default function Wizard() {
     1: t("Continue", "ဆက်သွားမည်"),
     2: t("Next", "နောက်တစ်ဆင့်"),
     3: t("Analyze field", "လယ်ကို သုံးသပ်မည်"),
-    4: t("Next: pick sowing date →", "နောက်: စိုက်ရက်ရွေး →"),
+    4: t("Next: choose sowing date", "နောက်တစ်ဆင့်: စိုက်ရက် ရွေးမည်"),
     5: t("Compare rotations", "လှည့်စိုက်နည်း နှိုင်းယှဉ်မည်"),
     6: t("See my plan", "အစီအစဉ် ကြည့်မည်"),
     7: t("Plan another field", "နောက်လယ် စီစဉ်မည်"),
@@ -104,6 +111,8 @@ export default function Wizard() {
     setPin(null);
     setPlace(null);
     setCropGoals(EMPTY_GOALS);
+    setSow(null);
+    setWhatIf(AS_EXPECTED);
     goToStep(1);
   }
 
@@ -124,9 +133,7 @@ export default function Wizard() {
       <header className="shrink-0 border-b border-hair bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 pt-4 pb-3 lg:px-8 lg:py-4">
           <h1 className="flex shrink-0 items-center gap-2 text-lg font-extrabold tracking-tight text-ink">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-grass text-white">
-              <AlarmClock className="h-5 w-5" />
-            </span>
+            <Logo className="h-8 w-8" />
             Farm&nbsp;O&apos;Clock
           </h1>
 
@@ -182,9 +189,13 @@ export default function Wizard() {
         {step === 2 && pin && <Screen2Environment pin={pin} place={placeLabel} />}
         {step === 3 && <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />}
         {step === 4 && pin && <SeasonReplay pin={pin} />}
-        {step === 5 && pin && <SowingCalendar pin={pin} />}
-        {step === 6 && <Screen5RotationCompare cropGoals={cropGoals} pin={pin} country={country} />}
-        {step === 7 && <Screen6Guidance pin={pin} place={placeLabel} country={country} cropGoals={cropGoals} />}
+        {step === 5 && pin && <SowingCalendar pin={pin} picked={sow} onPick={setSow} />}
+        {step === 6 && (
+          <Screen5RotationCompare cropGoals={cropGoals} pin={pin} country={country} sow={sow} whatIf={whatIf} onWhatIf={setWhatIf} />
+        )}
+        {step === 7 && (
+          <Screen6Guidance pin={pin} place={placeLabel} country={country} cropGoals={cropGoals} sow={sow} whatIf={whatIf} />
+        )}
       </section>
 
       <footer className="shrink-0 border-t border-hair bg-surface">
@@ -223,7 +234,10 @@ export default function Wizard() {
               {t("Back", "နောက်သို့")}
             </button>
             <button disabled={!canNext} onClick={next} className={`flex-[2] py-3.5 text-sm ${primaryBtn}`}>
-              {nextLabel[step]}
+              <span className="inline-flex items-center justify-center gap-1.5">
+                {nextLabel[step]}
+                {step < 7 && <span aria-hidden>→</span>}
+              </span>
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-"""Field greenness from MODIS NDVI (MOD13Q1 + MYD13Q1, 250 m, 16-day; Microsoft Planetary Computer).
+"""Field greenness from MODIS NDVI (Terra MOD13Q1, 250 m, 16-day; Microsoft Planetary Computer).
 
 - bare-field periods: calendar months whose typical NDVI is below BARE (mostly bare soil)
 - crop stress: latest clear composite vs the same time of year in earlier years
@@ -21,6 +21,7 @@ STAC = "https://planetarycomputer.microsoft.com/api/stac/v1"
 BARE = 0.30  # NDVI below this ≈ bare / very sparse cover
 STRESS = -0.10  # this much below the usual NDVI for the date = stressed
 YEARS = 4
+MIN_VIEWS = 12  # clear composites needed over YEARS; very cloudy tropical pins get ~15 of ~80
 
 
 POINT = "https://planetarycomputer.microsoft.com/api/data/v1/item/point/{lng},{lat}"
@@ -75,7 +76,7 @@ MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 
 
 def summary(s: pd.Series) -> dict:
-    if len(s) < 20:
+    if len(s) < MIN_VIEWS:
         raise ValueError("Not enough clear satellite views here")
     if float(s.median()) < 0.1:
         return {"cover": "water", "views": int(len(s))}  # pin is on a river/lake/sea pixel

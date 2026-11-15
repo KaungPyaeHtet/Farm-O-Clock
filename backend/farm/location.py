@@ -41,7 +41,9 @@ class Location:
             raise ValueError("Not enough NASA POWER data for this location")
         self.data_end: pd.Timestamp = valid.index.max()
         self.year = self.data_end.year
-        self.base = list(range(self.year - BASE_YEARS, self.year))
+        # Same 20 calendar years as the web replay grid (current year included; its sowing windows
+        # count only once complete — window_metrics returns None for missing data).
+        self.base = list(range(self.year - BASE_YEARS + 1, self.year + 1))
         self.rain, self.tmax = self.df["PRECTOTCORR"], self.df["T2M_MAX"]
         self.weeks = R.candidate_weeks(self.rain, list(range(R.CLIM_START_YEAR, self.year + 1)))
         wins = [R.window_metrics(self.rain, self.tmax, y, d) for y in self.base for d in self.weeks]
@@ -91,12 +93,18 @@ class Location:
 
     def seasonal_forecast(self, weeks_out: list[dict]) -> bool:
         """Adds week['forecast'] for sowing weeks the seasonal forecast covers. Returns availability."""
+        self.forecast_max_lead = None
         try:
             months = monthly_anomalies(self.lat, self.lng)
         except Exception:
             for w in weeks_out:
                 w["forecast"] = None
             return False
+        if months:
+            # Furthest sowing date the forecast can cover (window_delta needs 60 of the 90 days).
+            y, m = map(int, max(months).split("-"))
+            last_day = (pd.Timestamp(y, m, 1) + pd.offsets.MonthEnd(1)).date()
+            self.forecast_max_lead = max(0, (last_day - self.data_end.date()).days - 59)
         for w in weeks_out:
             start = (self.data_end + pd.Timedelta(days=w["lead_days"])).date()
             delta = window_delta(months, start)
@@ -183,7 +191,9 @@ class Location:
                            "root_zone_wetness_anomaly": z("root30"), "topsoil_wetness_anomaly": z("top30"),
                            "temperature_anomaly": z("t2m30")},
             "weeks": weeks_out,
-            "seasonal_forecast": {"available": forecast_ok, "source": "Open-Meteo Seasonal API (CC BY 4.0)"},
+            "seasonal_forecast": {"available": forecast_ok, "source": "Open-Meteo Seasonal API (CC BY 4.0)",
+                                  "max_lead_days": getattr(self, "forecast_max_lead", None)},
+            "max_lead_days": MAX_LEAD_DAYS,
             "model": {"version": model["version"], "trained": model["trained"],
                       "held_out_auc": {k.removeprefix("y_"): v["held_out"]["auc"] for k, v in model["targets"].items()}},
             "note": f"Probabilities use NASA conditions up to data_through and are only meaningful for weeks with "

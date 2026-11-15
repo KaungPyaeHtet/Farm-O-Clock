@@ -16,6 +16,11 @@ export type Metric = {
 export type GoalId = "water" | "nitrogen" | "erosion" | "income";
 export type ConstraintId = "no_machinery" | "frost_sensitive";
 
+/** The what-if sliders (0-100, 50 = as expected). Shared by the Rotations and Plan screens. */
+export type WhatIf = { rain: number; heat: number };
+/** The farmer's sowing week: index into the replay weeks + its day of year. */
+export type SowPick = { idx: number; doy: number };
+
 export type CropGoals = {
   crop: string | null;
   goals: GoalId[]; // 1–2 primary goals
@@ -91,7 +96,9 @@ export type OutlookData = {
   data_through: string;
   conditions: Record<string, number | null>;
   weeks: OutlookWeek[];
-  seasonal_forecast: { available: boolean; source: string };
+  seasonal_forecast: { available: boolean; source: string; max_lead_days?: number | null };
+  /** the NASA-conditions outlook is valid for sowing up to this many days after data_through */
+  max_lead_days?: number;
   model: { version: string; trained: string; held_out_auc: Record<string, number> };
   note: string;
 };
@@ -123,6 +130,7 @@ export type SoilData = {
   organic: "low" | "medium" | "good";
   phLevel: "acidic" | "good" | "alkaline";
   health: number; // 0-100 soil-health score
+  asOf?: string; // set when SoilGrids was down and this is the last known result (ISO time)
 };
 
 /** /api/vegetation — MODIS NDVI greenness at the pin. */

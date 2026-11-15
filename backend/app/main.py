@@ -130,6 +130,8 @@ def water(r: Rotations):
 
 class RotationReq(Point):
     crop: str = Field(min_length=2, max_length=40, description="main crop, e.g. rice")
+    start_doy: int | None = Field(None, ge=1, le=366, description="farmer's chosen sowing week (day of year); default = best week")
+    frost_sensitive: bool = Field(False, description="avoid partner crops whose season met frost in > 1 of 10 years")
 
 
 @app.post("/v1/rotation", dependencies=[Depends(check_key)])
@@ -141,9 +143,12 @@ def rotation(r: RotationReq):
     if main not in CROPS:
         raise HTTPException(status_code=422, detail=f"unknown crop {r.crop}")
     loc = location(r.lat, r.lng)
-    wi = loc.scenario()["best_week_index"]
+    if r.start_doy is None:
+        wi = loc.scenario()["best_week_index"]
+    else:  # nearest candidate week to the farmer's chosen date (circular day-of-year)
+        wi = min(range(len(loc.weeks)), key=lambda i: min(abs(loc.weeks[i] - r.start_doy), 365 - abs(loc.weeks[i] - r.start_doy)))
     f = Series.from_df(loc.df, r.lat)
-    picks = pick_partners(f, main, loc.weeks, wi, loc.base)
+    picks = pick_partners(f, main, loc.weeks, wi, loc.base, r.frost_sensitive)
     main_stats = crop_stats(f, main, loc.weeks, wi, loc.base)
     wp, sp = picks["water"]["pick"], picks["soil"]["pick"]
     rot = {"baseline": [main] * 3, "water": [main, wp, main], "soil": [main, sp, main]}
@@ -156,5 +161,6 @@ def rotation(r: RotationReq):
                     "low_risk_share": round(float(sum(shares) / len(shares)), 3) if shares else None}
     annual = float(loc.rain[loc.rain.index.year.isin(loc.base)].mean() * 365)
     return {"sowing_doy": loc.weeks[wi], "plans": out, "annual_rain_mm": round(annual),
+            "years": [loc.base[0], loc.base[-1]], "main_frost_share": main_stats.get("frost_share"),
             "candidates": {k: [{**c, "crop": display(c["crop"])} for c in picks[k]["candidates"]] for k in ("water", "soil")},
             "method": "partners chosen by low-risk share + FAO-56 irrigation + ECOCROP temperature fit; held-out test in reports/"}

@@ -3,7 +3,7 @@
 // Deterministic, bilingual (English / Burmese) summary of the recommended
 // rotation + a field-check checklist. A fixed template — no external AI service.
 
-import type { GoalId, Verdict } from "./types";
+import type { ConstraintId, GoalId, Verdict } from "./types";
 import { cropLabel, type ScoredStrategy } from "./strategies";
 
 export type Lang = "en" | "my";
@@ -72,7 +72,9 @@ export function buildBrief(
   goals: GoalId[],
   best: ScoredStrategy,
   verdict: Verdict | null,
-  lang: Lang
+  lang: Lang,
+  /** Optional (keeps the signature compatible): farmer constraints + share of past seasons with frost at the sowing week. */
+  extra: { constraints?: ConstraintId[]; frostShare?: number | null } = {}
 ): Brief {
   const cropName = pick(CROP[crop ?? "rice"] ?? CROP.rice, lang);
   const stratName = pick(STRAT[best.id], lang);
@@ -88,8 +90,8 @@ export function buildBrief(
   if (verdict) {
     body.push(
       lang === "en"
-        ? `This season looks ${pick(VERDICT[verdict], lang)} for your area.`
-        : `ဤရာသီသည် သင့်ဒေသအတွက် ${pick(VERDICT[verdict], lang)} ဖြစ်ပုံရပါသည်။`
+        ? `The last 3 months were ${pick(VERDICT[verdict], lang)} in your area.`
+        : `လွန်ခဲ့သော ၃ လသည် သင့်ဒေသတွင် ${pick(VERDICT[verdict], lang)} ဖြစ်ခဲ့သည်။`
     );
   }
   body.push(
@@ -129,6 +131,25 @@ export function buildBrief(
         ? "Check your field drainage to avoid waterlogging."
         : "ရေဝပ်မှု မဖြစ်စေရန် လယ်ကွင်း ရေထုတ်မြောင်း စစ်ဆေးပါ။"
     );
+
+  if (extra.constraints?.includes("no_machinery") && best.id !== "baseline")
+    checklist.push(
+      lang === "en"
+        ? `Check you can sow and harvest ${partner} with the tools you already have (hand, animal or hired).`
+        : `${partner} ကို သင့်လက်ရှိ ကိရိယာ (လက်၊ နွား သို့ ငှားရမ်း) ဖြင့် စိုက်၊ ရိတ် နိုင်မနိုင် စစ်ပါ။`
+    );
+  if (extra.constraints?.includes("frost_sensitive")) {
+    const n = extra.frostShare != null ? Math.round(extra.frostShare * 20) : null;
+    checklist.push(
+      lang === "en"
+        ? n
+          ? `Frost reached this sowing season in ${n} of the last 20 years here. Ask locally for the last frost date and sow after it.`
+          : "Ask locally for the last frost date and sow after it."
+        : n
+          ? `ဤနေရာတွင် ဤစိုက်ရာသီ၌ နောက်ဆုံး ၂၀ နှစ်တွင် ${n} နှစ် ဆီးနှင်းကျခဲ့သည်။ နောက်ဆုံး ဆီးနှင်းကျရက်ကို ဒေသတွင်မေးပြီး ၎င်းနောက်မှ စိုက်ပါ။`
+          : "နောက်ဆုံး ဆီးနှင်းကျရက်ကို ဒေသတွင်မေးပြီး ၎င်းနောက်မှ စိုက်ပါ။"
+    );
+  }
 
   const headline =
     lang === "en" ? "Your planting plan" : "သင့် စိုက်ပျိုးရေး အစီအစဉ်";

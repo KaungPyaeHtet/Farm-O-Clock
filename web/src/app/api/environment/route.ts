@@ -10,6 +10,7 @@ type Status = "good" | "watch" | "alert";
 // Farmer soil reports → approximate top-soil wetness (0-1), same scale as GWETTOP.
 const REPORT_WETNESS: Record<string, number> = { dry: 0.2, damp: 0.5, wet: 0.75, flooded: 0.95 };
 const PRIOR_REPORTS = 3; // 3 nearby reports ≈ equal weight with the satellite estimate
+const MAX_REPORTS = 9; // cap: reports never outweigh the satellite more than 3 : 1
 
 /** Blend satellite wetness with validated farmer reports within 10 km / 30 days. */
 async function withFarmerReports(lat: number, lng: number, sat: number | null) {
@@ -26,7 +27,8 @@ async function withFarmerReports(lat: number, lng: number, sat: number | null) {
     sum += w * Number(r.reports);
   }
   if (!n) return { value: sat, reports: 0 };
-  const k = n / (n + PRIOR_REPORTS);
+  const nEff = Math.min(n, MAX_REPORTS);
+  const k = nEff / (nEff + PRIOR_REPORTS);
   return { value: k * (sum / n) + (1 - k) * sat, reports: n };
 }
 

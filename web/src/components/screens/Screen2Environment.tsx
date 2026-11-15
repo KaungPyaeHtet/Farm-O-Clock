@@ -138,6 +138,12 @@ function SoilCard({ soil }: { soil: SoilData }) {
           <Layers className="h-4 w-4" /> {t("Soil", "မြေဆီလွှာ")}
         </span>
         <div className="mt-1 text-2xl font-extrabold text-ink">{t(soil.texture, TEXTURE_MY[soil.texture] ?? soil.texture)}</div>
+        {soil.asOf && (
+          <p className="text-[11px] text-muted">
+            {t(`Last known result, ${new Date(soil.asOf).toISOString().slice(0, 10)} (soil map is down now)`,
+               `နောက်ဆုံးရလဒ် ${new Date(soil.asOf).toISOString().slice(0, 10)} (မြေပုံ ယခု မရပါ)`)}
+          </p>
+        )}
       </div>
       <div className="mt-3">
         <div className="flex h-3 gap-[2px] overflow-hidden rounded-full">
@@ -183,6 +189,7 @@ function monthRanges(ms: string[], names: string[]): string {
 
 function GreenCard({ veg, loading }: { veg: VegetationData | null; loading: boolean }) {
   const { t, lang } = useLang();
+  const [today] = useState(() => Date.now());
   const head = (
     <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
       <Leaf className="h-4 w-4" /> {t("Green cover", "အပင်ဖုံးလွှမ်းမှု")}
@@ -215,12 +222,18 @@ function GreenCard({ veg, loading }: { veg: VegetationData | null; loading: bool
       ? { s: "good", en: "Greener than usual", my: "ပုံမှန်ထက် ပိုစိမ်း" }
       : { s: "good", en: "Usual for this time", my: "ဤအချိန်အတွက် ပုံမှန်" };
   const monthly = veg.monthly_ndvi ?? {};
-  const now = veg.latest ? new Date(veg.latest.date).getUTCMonth() : -1;
+  const shot = veg.latest ? new Date(veg.latest.date) : null;
+  const now = shot ? shot.getUTCMonth() : -1;
+  // cloudy places can go months without a clear photo: then "vs usual" is not about now
+  const fresh = !!shot && today - shot.getTime() < 60 * 864e5;
+  const shotDate = shot
+    ? `${shot.getUTCDate()} ${(lang === "my" ? MONTHS_MY : MONTHS)[now].slice(0, lang === "my" ? undefined : 3)} ${shot.getUTCFullYear()}`
+    : "";
   return (
     <div className={`${card} col-span-2 p-4 lg:p-5`}>
       <div className="flex items-center justify-between gap-2">
         {head}
-        {veg.usual_for_date != null && (
+        {fresh && veg.usual_for_date != null && (
           <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_PILL[vs.s]}`}>{t(vs.en, vs.my)}</span>
         )}
       </div>
@@ -246,6 +259,12 @@ function GreenCard({ veg, loading }: { veg: VegetationData | null; loading: bool
           <span key={m} className="flex-1 text-center">{m.slice(0, 3)}</span>
         ))}
       </div>
+      {shot && (
+        <p className="mt-2 text-xs text-muted">
+          {t("Last clear photo:", "နောက်ဆုံး ကြည်လင်သောဓာတ်ပုံ:")} <span className="font-semibold text-ink">{shotDate}</span>
+          {!fresh && t(" (often cloudy here)", " (ဤနေရာ မကြာခဏ တိမ်ထူသည်)")}
+        </p>
+      )}
       {!!veg.bare_months?.length && (
         <p className="mt-2 text-xs text-muted">
           {t("Usually bare:", "ပုံမှန် ဗလာဖြစ်ချိန်:")}{" "}
@@ -273,6 +292,7 @@ export default function Screen2Environment({ pin, place }: { pin: LatLng; place:
   const [data, setData] = useState<EnvData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [soil, setSoil] = useState<SoilData | null>(null);
+  const [soilDown, setSoilDown] = useState(false);
   const [veg, setVeg] = useState<VegetationData | null>(null);
   const [vegLoading, setVegLoading] = useState(true);
 
@@ -284,7 +304,7 @@ export default function Screen2Environment({ pin, place }: { pin: LatLng; place:
       .finally(() => active && setVegLoading(false));
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => active && setSoil(d))
-      .catch(() => {});
+      .catch(() => active && setSoilDown(true));
     fetchJson<EnvData>(`/api/environment?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => active && setData(d))
       .catch((e) => active && setError(e.message));
@@ -306,6 +326,22 @@ export default function Screen2Environment({ pin, place }: { pin: LatLng; place:
             ? CARDS.map((c) => <SkeletonCard key={c.key} />)
             : CARDS.map((c) => <MetricCard key={c.key} c={c} metric={data[c.key]} />)}
           {soil && <SoilCard soil={soil} />}
+          {!soil && soilDown && (
+            <div className={`${card} col-span-2 p-4 lg:p-5`}>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+                <Layers className="h-4 w-4" /> {t("Soil", "မြေဆီလွှာ")}
+              </span>
+              <p className="mt-2 text-sm font-semibold text-[#9a6a0c]">
+                {t("Soil map unavailable right now.", "မြေဆီလွှာ မြေပုံ ယခု မရနိုင်ပါ။")}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                {t(
+                  "The plan will use typical soil values. Dig and feel your soil, or ask your extension worker.",
+                  "အစီအစဉ်တွင် ပုံမှန် မြေတန်ဖိုးများ သုံးမည်။ မြေကို တူးပြီး စမ်းကြည့်ပါ သို့ စိုက်ပျိုးရေးဝန်ထမ်းကို မေးပါ။"
+                )}
+              </p>
+            </div>
+          )}
           <GreenCard veg={veg} loading={vegLoading} />
         </div>
       )}
