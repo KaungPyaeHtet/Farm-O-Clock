@@ -22,7 +22,7 @@ export default function Screen1Map({
   onPick,
 }: {
   pin: LatLng | null;
-  onPick: (p: LatLng, name?: string) => void;
+  onPick: (p: LatLng, name?: string) => Promise<boolean> | void;
 }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");

@@ -1,0 +1,39 @@
+{
+  "water": {
+    "cases": 148,
+    "pick_differs_from_table": 1.0,
+    "low_risk_data": 0.291,
+    "low_risk_table": 0.251,
+    "irrigation_mm_data": 183,
+    "irrigation_mm_table": 235,
+    "utility_data": 3.04,
+    "utility_table": -51.34,
+    "data_better_share": 0.946,
+    "tie_share": 0.0,
+    "most_picked": {
+      "chickpea": 82,
+      "millet": 42,
+      "cowpea": 22,
+      "pigeon pea": 2
+    }
+  },
+  "soil": {
+    "cases": 148,
+    "pick_differs_from_table": 0.899,
+    "low_risk_data": 0.294,
+    "low_risk_table": 0.259,
+    "irrigation_mm_data": 193,
+    "irrigation_mm_table": 256,
+    "utility_data": 15.69,
+    "utility_table": -6.14,
+    "data_better_share": 0.791,
+    "tie_share": 0.101,
+    "most_picked": {
+      "chickpea": 54,
+      "field pea": 38,
+      "mung bean": 28,
+      "clover (cover)": 14,
+      "sunn hemp (cover)": 10
+    }
+  }
+}

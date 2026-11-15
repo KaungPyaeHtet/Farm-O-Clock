@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, type LucideIcon } from "lucide-react";
 import type { CropGoals, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
-import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type ScoredStrategy } from "@/lib/strategies";
+import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type RotationApi, inputsFromRotation, type ScoredStrategy } from "@/lib/strategies";
 import { fetchJson } from "@/lib/fetchJson";
 import type { SoilData } from "@/lib/types";
 import { card } from "@/lib/ui";
@@ -110,8 +110,8 @@ export default function Screen5RotationCompare({ cropGoals, pin }: { cropGoals: 
     if (!pin) return;
     let active = true;
     const crop = cropGoals.crop ?? "rice";
-    fetchJson<{ rotations: FieldInputs["water"] }>(`/api/water?lat=${pin.lat}&lng=${pin.lng}&crop=${crop}`)
-      .then((d) => active && setInputs((i) => ({ ...i, water: d.rotations })))
+    fetchJson<RotationApi>(`/api/rotation?lat=${pin.lat}&lng=${pin.lng}&crop=${crop}`)
+      .then((d) => active && setInputs((i) => ({ ...i, ...inputsFromRotation(d) })))
       .catch(() => {});
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health })))

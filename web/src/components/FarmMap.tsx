@@ -39,7 +39,7 @@ function RecenterOnPin({ position }: { position: LatLng | null }) {
   return null;
 }
 
-function ClickHandler({ onPick }: { onPick: (p: LatLng) => void }) {
+function ClickHandler({ onPick }: { onPick: (p: LatLng) => Promise<boolean> | void }) {
   useMapEvents({
     click(e) {
       onPick({ lat: e.latlng.lat, lng: e.latlng.lng });
@@ -53,7 +53,7 @@ export default function FarmMap({
   onPick,
 }: {
   position: LatLng | null;
-  onPick: (p: LatLng) => void;
+  onPick: (p: LatLng) => Promise<boolean> | void;
 }) {
   return (
     <MapContainer
@@ -80,9 +80,11 @@ export default function FarmMap({
           icon={pinIcon}
           draggable
           eventHandlers={{
-            dragend: (e) => {
-              const ll = (e.target as L.Marker).getLatLng();
-              onPick({ lat: ll.lat, lng: ll.lng });
+            dragend: async (e) => {
+              const m = e.target as L.Marker;
+              const ll = m.getLatLng();
+              const ok = await onPick({ lat: ll.lat, lng: ll.lng });
+              if (ok === false) m.setLatLng([position.lat, position.lng]); // refused (water): snap back
             },
           }}
         />

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Share2, Check, CalendarCheck, Sprout, CloudSun, Shovel } from "lucide-react";
 import type { CropGoals, EnvData, HistoryData, LatLng, ReplayData, SoilData, Verdict } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
-import { cropLabel, scoreStrategies, STRATEGY_TEXT, type FieldInputs } from "@/lib/strategies";
+import { cropLabel, scoreStrategies, STRATEGY_TEXT, type FieldInputs, type RotationApi, inputsFromRotation } from "@/lib/strategies";
 import { buildBrief } from "@/lib/brief";
 import { shareCard } from "@/lib/shareCard";
 import { card, primaryBtn } from "@/lib/ui";
@@ -59,8 +59,8 @@ export default function Screen6Guidance({
     fetchJson<HistoryData>(`/api/history?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => active && setVerdict(d.verdict))
       .catch(() => {});
-    fetchJson<{ rotations: FieldInputs["water"] }>(`/api/water?lat=${pin.lat}&lng=${pin.lng}&crop=${cropGoals.crop ?? "rice"}`)
-      .then((d) => active && setInputs((i) => ({ ...i, water: d.rotations })))
+    fetchJson<RotationApi>(`/api/rotation?lat=${pin.lat}&lng=${pin.lng}&crop=${cropGoals.crop ?? "rice"}`)
+      .then((d) => active && setInputs((i) => ({ ...i, ...inputsFromRotation(d) })))
       .catch(() => {});
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => {
@@ -92,7 +92,30 @@ export default function Screen6Guidance({
   );
   const planName = t(...STRATEGY_TEXT[best.id].name);
 
-  const whyText = brief.why;
+  // Add this pin's own numbers (from /api/rotation) to the reason, when they've loaded.
+  const evidence = (() => {
+    const lr = inputs.lowRisk;
+    if (!lr || lr[best.id] == null) return "";
+    const n = Math.round(lr[best.id]! * 20);
+    const base = lr.baseline != null ? Math.round(lr.baseline * 20) : null;
+    const wBest = inputs.water?.[best.id]?.irrigation_mm;
+    const wBase = inputs.water?.baseline?.irrigation_mm;
+    const crop = cropLabel(best.rotation[0], lang);
+    const parts: string[] = [];
+    parts.push(
+      best.id !== "baseline" && base != null
+        ? t(`Here, this plan’s crops went well in ${n} of 20 past seasons (${crop} alone: ${base}).`,
+            `ဤနေရာတွင် ဤအစီအစဉ်၏ သီးနှံများ ယခင် ရာသီ ၂၀ အနက် ${n} ခု အဆင်ပြေခဲ့သည် (${crop} တစ်မျိုးတည်း: ${base})။`)
+        : t(`Here, ${crop} went well in ${n} of 20 past seasons.`, `ဤနေရာတွင် ${crop} သည် ယခင် ရာသီ ၂၀ အနက် ${n} ခု အဆင်ပြေခဲ့သည်။`)
+    );
+    if (best.id !== "baseline" && wBest != null && wBase != null && wBase - wBest >= 50) {
+      const saved = Math.round((wBase - wBest) / 10) * 10;
+      parts.push(t(`It needs about ${saved.toLocaleString()} mm less extra water over 3 years.`,
+                   `၃ နှစ်တွင် ထပ်လိုရေ ${saved.toLocaleString()} မမ ခန့် လျော့သည်။`));
+    }
+    return " " + parts.join(" ");
+  })();
+  const whyText = brief.why + evidence;
   const checklist = brief.checklist;
 
   // Save the finished plan once (anonymous) to Supabase `fields` + `plans` (no-op without a database).

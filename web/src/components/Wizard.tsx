@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlarmClock, Check } from "lucide-react";
 import type { CropGoals, LatLng } from "@/lib/types";
+import type { LandCover } from "@/app/api/landcover/route";
 import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
 import { primaryBtn, ghostBtn } from "@/lib/ui";
@@ -33,7 +34,23 @@ export default function Wizard() {
   const [place, setPlace] = useState<string | null>(null);
 
   // Pin from search → use the searched name; pin from a map tap → look up the nearest place.
-  function pick(p: LatLng, name?: string) {
+  // Every pin (tap, drag, "my location", search) is checked against ESA WorldCover first:
+  // water is refused outright; a town gets a gentle "move onto your field" note.
+  const [checking, setChecking] = useState(false);
+  const [pinMsg, setPinMsg] = useState<"water" | "town" | null>(null);
+  const pickSeq = useRef(0);
+  async function pick(p: LatLng, name?: string): Promise<boolean> {
+    const seq = ++pickSeq.current;
+    setChecking(true);
+    setPinMsg(null);
+    const lc = await fetchJson<LandCover>(`/api/landcover?lat=${p.lat.toFixed(5)}&lng=${p.lng.toFixed(5)}`).catch(() => null);
+    if (seq !== pickSeq.current) return false; // a newer tap won
+    setChecking(false);
+    if (lc?.water) {
+      setPinMsg("water");
+      return false;
+    }
+    if (lc?.cover === "built-up") setPinMsg("town");
     setPin(p);
     setPlace(name ?? null);
     if (!name) {
@@ -41,6 +58,7 @@ export default function Wizard() {
         .then((d) => setPlace((cur) => cur ?? d.name ?? null))
         .catch(() => {});
     }
+    return true;
   }
   const placeLabel = place ?? (pin ? `${pin.lat.toFixed(2)}, ${pin.lng.toFixed(2)}` : "");
   const [cropGoals, setCropGoals] = useState<CropGoals>(EMPTY_GOALS);
@@ -56,7 +74,7 @@ export default function Wizard() {
   };
 
   const canNext =
-    step === 1 ? !!pin : step === 3 ? !!cropGoals.crop && cropGoals.goals.length >= 1 : true;
+    step === 1 ? !!pin && !checking : step === 3 ? !!cropGoals.crop && cropGoals.goals.length >= 1 : true;
 
   // Browser/phone Back moves between steps instead of leaving the app.
   useEffect(() => {
@@ -164,12 +182,23 @@ export default function Wizard() {
         <div className="mx-auto max-w-6xl px-4 pt-3 pb-5 lg:flex lg:items-center lg:gap-4 lg:px-8 lg:py-4">
           {step === 1 && (
             <p className="mb-3 text-center text-sm text-muted lg:mb-0 lg:flex-1 lg:text-left">
-              {pin ? (
+              {checking ? (
+                <span className="text-muted">{t("Checking this spot…", "ဤနေရာကို စစ်နေသည်…")}</span>
+              ) : pinMsg === "water" ? (
+                <span className="font-semibold text-clay">
+                  {t("That spot is water. Tap on land: your field.", "ထိုနေရာသည် ရေပြင် ဖြစ်သည်။ ကုန်းမြေ (သင့်လယ်) ပေါ် တို့ပါ။")}
+                </span>
+              ) : pin ? (
                 <>
                   📍 {t("Your field", "သင့်လယ်")}:{" "}
                   <span className="font-bold text-ink">
                     {place ? `${t("near", "အနီး")} ${place}` : t("finding the nearest place…", "အနီးဆုံးနေရာ ရှာနေသည်…")}
                   </span>
+                  {pinMsg === "town" && (
+                    <span className="block text-xs font-semibold text-[#9a6a0c]">
+                      {t("This looks like a town or buildings. Drag the pin onto your field.", "မြို့ သို့ အဆောက်အအုံ ဖြစ်ပုံရသည်။ ပင်ကို သင့်လယ်ပေါ် ဆွဲပါ။")}
+                    </span>
+                  )}
                 </>
               ) : (
                 <span className="text-muted/70">{t("No field selected yet", "လယ်မရွေးရသေးပါ")}</span>

@@ -21,7 +21,8 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
     `geocode` (Nominatim), `environment` (POWER 30-day + SRTM slope via OpenTopoData),
     `replay` (20-yr × 14-week risk grid), `history` (Dry/Normal/Wet z-score),
     `observations` (farmer reports → Supabase), `geocode/reverse` (pin → "Town, Region, Country"),
-    `outlook` + `scenario` + `vegetation` + `water` (Python API via `lib/backend.ts`; 503 → UI hides those panels),
+    `outlook` + `scenario` + `vegetation` + `rotation` (Python API via `lib/backend.ts`; 503 → UI hides those panels),
+    `landcover` (ESA WorldCover: pins on water are refused, built-up gets a warning), `plans` (save finished plans),
     `soil` (SoilGrids). The plan text is a fixed template (`lib/brief.ts`); the user chose NOT to use any LLM/AI API. Calibrated "N in 10" chance:
     `lib/confidence.ts` + `lib/confidence-curve.json` (copied from `backend/models/confidence_curve.json` — keep in sync).
     `replay`/`history` cache raw POWER pulls in Supabase via `withNasaCache`.
@@ -47,7 +48,8 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
 - `backend/` modules:
   - `farm/power.py` (NASA POWER client; cache in `.cache/`, `/tmp` on Vercel), `farm/replay.py` (engine; `replay_like_web`
     mirrors the TS route exactly — `tests/test_parity.py`), `farm/location.py`, `farm/seasonal.py`, `farm/vegetation.py`,
-    `farm/water.py`, `farm/risk_model.py`. Deps: `requirements.txt` (runtime) / `requirements-dev.txt` (eval, tests).
+    `farm/water.py`, `farm/risk_model.py`, `farm/rotation.py` (data-driven partner crops: low-risk share + FAO-56 +
+    ECOCROP temperature; `/v1/rotation`, tested in `eval/partner_eval.py`). Deps: `requirements.txt` (runtime) / `requirements-dev.txt` (eval, tests).
   - Evals: `eval/run_eval.py` (E0–E3), `improvements.py` (E4), `yield_check.py` (E5, FAOSTAT), `scale_eval.py` (E6, 73 sites),
     `make_figures.py` → `reports/figures/` (14 charts).
   - `eval/REPORT.md` = accuracy/skill results. `backend/README.md` = model plan, test plan, hosting.

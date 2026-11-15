@@ -96,3 +96,14 @@ def test_water(client):
     w = r.json()["rotations"]
     assert w["water"]["need_mm"] < w["baseline"]["need_mm"]  # sorghum needs less than rice
     assert client.post("/v1/water", json={"lat": 1, "lng": 1, "rotations": {"x": ["Banana"]}}).status_code == 422
+
+
+def test_rotation(client):
+    r = client.post("/v1/rotation", json={"lat": 16.7, "lng": 95.6, "crop": "rice"})
+    assert r.status_code == 200
+    plans = r.json()["plans"]
+    assert plans["baseline"]["rotation"] == ["Rice"] * 3
+    assert plans["water"]["rotation"][1] != "Rice" and plans["soil"]["rotation"][1] != "Rice"
+    for p in plans.values():
+        assert p["water"]["irrigation_mm"] is not None and 0 <= p["low_risk_share"] <= 1
+    assert client.post("/v1/rotation", json={"lat": 1, "lng": 1, "crop": "banana"}).status_code == 422

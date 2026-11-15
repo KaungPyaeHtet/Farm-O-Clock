@@ -173,6 +173,23 @@ National yields from FAOSTAT (Dec 2025 release) were detrended per country and c
 for flood and heat in new regions, but **not for drought**. For drought, the 20-year average is as good as the model, so the app's
 outlook card should lean on the usual rate there. The flood and heat outlook generalises.
 
+## 10. Rotation partner crops: data-driven vs a fixed table
+
+The year-2 crop of the water-saving and soil-building plans used to come from a fixed table (rice → sorghum / mung bean
+everywhere). Now each pin scores every candidate on three things: how often that crop's own season went well (last 20 years,
+engine v1.1), its FAO-56 irrigation need, and whether the season's temperature suits it (FAO ECOCROP optimal range). It
+then picks the best. **Held-out test:** picks made with 1996–2015 data, scored on 2016–2024, at 73 sites × rice and maize.
+
+| Plan | Low-risk seasons (data / table) | Irrigation per season (data / table) | Data pick better |
+|---|---|---|---|
+| Water-saving | **29 %** / 25 % | **183 mm** / 235 mm | **95 %** of cases |
+| Soil-building | **29 %** / 26 % | **193 mm** / 256 mm | **79 %** of cases |
+
+The first version, without the temperature check, chose cool-season field pea even in hot monsoon climates. Adding crop
+temperature ranges fixed that. Most common picks: chickpea, millet and cowpea for water-saving; chickpea, field pea (cool
+sites only) and mung bean for soil-building. Still not modelled: local seed availability, markets and pests, which is why the
+checklist asks the farmer to confirm seed is available. `backend/eval/partner_eval.py`, `data/partner_eval.json`.
+
 ---
 
 ## How to test it yourself
@@ -189,6 +206,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # once
 .venv/bin/python -m eval.yield_check           # 6. FAOSTAT yield ground truth (section 7)
 .venv/bin/python -m eval.scale_eval            # 7. 73 sites + spatial hold-out (section 9, ~15 min)
 PARITY_WEB_URL=http://localhost:3000 .venv/bin/python -m pytest tests/test_parity.py   # 8. Python == web engine
+.venv/bin/python -m eval.partner_eval          # 9. data-driven partner crops vs fixed table (section 10)
 ```
 
 - The first run downloads about 40 years of NASA POWER data per site (a few seconds each) into `backend/.cache/`. After that it runs offline.
@@ -208,6 +226,7 @@ PARITY_WEB_URL=http://localhost:3000 .venv/bin/python -m pytest tests/test_parit
 | `data/improvements.json` | Figures 10–11 (confidence fix, sowing-week stability) |
 | `data/yield_check.json` | Figure 12 (FAOSTAT yield check) |
 | `data/scale_eval.json` | Figure 13 (73 sites, spatial hold-out) |
+| `data/partner_eval.json` | Section 10 (partner crops, held-out) |
 
 ## Caveats (say these to judges before they ask)
 

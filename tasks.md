@@ -60,6 +60,9 @@ Detail: `backend/README.md` (API, models, deploy), `reports/README.md` (accuracy
 - [x] Sowing dates are real future dates ("5 Aug 2027 · in 9 months"); passed weeks greyed; "best" = best week still ahead (`web/src/lib/season.ts`)
 - [x] Past seasons: the year × week heatmap on phone AND desktop (fixed-size squares, week labels, low-risk count per week)
 - [x] Map: country/city/town labels over the satellite photo, "Use my location" button, draggable pin
+- [x] Rotation partner crops picked from data per pin (not a fixed table); resilience from measured low-risk share; held-out: better in 95 % / 79 % of cases (`eval/partner_eval.py`)
+- [x] Pins in water are refused (ESA WorldCover 10 m; tap, drag, location, search); towns get a warning
+- [x] Plan reason shows this pin's own numbers (seasons that went well, water saved)
 - [x] Supabase fully used: `nasa_cache`, `observations`, now also `fields` + `plans` (each finished plan, anonymous, ~100 m) and `model_evals` (scores uploaded)
 
 ## 8. Validation and pitch (P1)

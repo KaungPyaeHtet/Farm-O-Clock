@@ -86,7 +86,25 @@ export type FieldInputs = {
   water?: Partial<Record<StrategyId, { need_mm: number; effective_rain_mm: number; irrigation_mm: number }>>;
   /** SoilGrids 0-100 soil-health score, from /api/soil */
   soilHealth?: number;
+  /** Data-driven partner crops for this pin (display names), from /api/rotation */
+  partners?: { water?: string; soil?: string };
+  /** Share of past seasons that were low risk for each plan's crops at this pin (0-1), from /api/rotation */
+  lowRisk?: Partial<Record<StrategyId, number>>;
 };
+
+/** Shape of /api/rotation → FieldInputs. */
+export type RotationApi = {
+  plans: Record<StrategyId, { rotation: string[]; water: { need_mm: number; effective_rain_mm: number; irrigation_mm: number }; low_risk_share: number | null }>;
+};
+export function inputsFromRotation(r: RotationApi): FieldInputs {
+  return {
+    water: Object.fromEntries(Object.entries(r.plans).map(([k, v]) => [k, v.water])) as FieldInputs["water"],
+    partners: { water: r.plans.water?.rotation[1], soil: r.plans.soil?.rotation[1] },
+    lowRisk: Object.fromEntries(
+      Object.entries(r.plans).filter(([, v]) => v.low_risk_share != null).map(([k, v]) => [k, v.low_risk_share as number])
+    ) as FieldInputs["lowRisk"],
+  };
+}
 
 export function scoreStrategies(
   crop: string | null,
@@ -112,12 +130,12 @@ export function scoreStrategies(
     water: {
       name: "Water-Conserving",
       tag: "Drought-resilient rotation",
-      rotation: [cropName, DROUGHT_PARTNER[c] ?? "Sorghum", cropName],
+      rotation: [cropName, inputs.partners?.water ?? DROUGHT_PARTNER[c] ?? "Sorghum", cropName],
     },
     soil: {
       name: "Soil-Rebuilding",
       tag: "Nitrogen-fixing / cover crop",
-      rotation: [cropName, LEGUME_PARTNER[c] ?? "Lentil", cropName],
+      rotation: [cropName, inputs.partners?.soil ?? LEGUME_PARTNER[c] ?? "Lentil", cropName],
     },
   };
 
@@ -136,8 +154,10 @@ export function scoreStrategies(
       irrigationMm != null
         ? clamp(100 - irrigationMm / 3 / 8) // 800 mm extra water per season → 0
         : clamp(100 - p.waterNeed - dry * 35 * (1 - p.drought));
+    // Measured: how often this plan's crops had low-risk seasons here (0.5 share → 100). Else the rule value.
+    const baseRes = inputs.lowRisk?.[id] != null ? clamp(inputs.lowRisk[id]! * 200) : p.res;
     const resilience = clamp(
-      p.res - dry * 45 * (1 - p.drought) - hot * 35 * (1 - p.drought) - wet * 18
+      baseRes - dry * 45 * (1 - p.drought) - hot * 35 * (1 - p.drought) - wet * 18
     );
     const overall = clamp((soil + waterThrift + resilience) / 3);
 

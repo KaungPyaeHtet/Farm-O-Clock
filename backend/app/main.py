@@ -17,6 +17,7 @@ from farm import risk_model as RM
 from farm.location import Location
 from farm.vegetation import ndvi_series, summary as ndvi_summary
 from farm.water import CROPS, rotation_water
+from farm.rotation import Field as Series, crop_stats, display, pick_partners
 
 app = FastAPI(title="Farm O'Clock API", version="1.0")
 MODEL = RM.load()
@@ -102,3 +103,34 @@ def water(r: Rotations):
         out[sid] = rotation_water(loc.df, r.lat, crops, best, loc.base)
     return {"sowing_doy": best, "rotations": out,
             "method": "FAO-56 Kc × Hargreaves ET0; effective rain FAO/AGLW; paddy percolation not included"}
+
+
+class RotationReq(Point):
+    crop: str = Field(min_length=2, max_length=40, description="main crop, e.g. rice")
+
+
+@app.post("/v1/rotation", dependencies=[Depends(check_key)])
+def rotation(r: RotationReq):
+    """Data-driven rotation plans at this pin: partner crops picked by low-risk share
+    (each crop's own season, last 20 years) + FAO-56 irrigation + temperature fit,
+    with water need and a resilience share for each plan."""
+    main = r.crop.lower()
+    if main not in CROPS:
+        raise HTTPException(status_code=422, detail=f"unknown crop {r.crop}")
+    loc = location(r.lat, r.lng)
+    wi = loc.scenario()["best_week_index"]
+    f = Series.from_df(loc.df, r.lat)
+    picks = pick_partners(f, main, loc.weeks, wi, loc.base)
+    main_stats = crop_stats(f, main, loc.weeks, wi, loc.base)
+    wp, sp = picks["water"]["pick"], picks["soil"]["pick"]
+    rot = {"baseline": [main] * 3, "water": [main, wp, main], "soil": [main, sp, main]}
+    stats = {main: main_stats, **{c["crop"]: c for k in ("water", "soil") for c in picks[k]["candidates"]}}
+    out = {}
+    for sid, crops in rot.items():
+        shares = [stats[c]["low_risk"] for c in crops if stats[c]["low_risk"] is not None]
+        out[sid] = {"rotation": [display(c) for c in crops],
+                    "water": rotation_water(loc.df, r.lat, crops, loc.weeks[wi], loc.base),
+                    "low_risk_share": round(float(sum(shares) / len(shares)), 3) if shares else None}
+    return {"sowing_doy": loc.weeks[wi], "plans": out,
+            "candidates": {k: [{**c, "crop": display(c["crop"])} for c in picks[k]["candidates"]] for k in ("water", "soil")},
+            "method": "partners chosen by low-risk share + FAO-56 irrigation + ECOCROP temperature fit; held-out test in reports/"}
