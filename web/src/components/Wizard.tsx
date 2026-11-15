@@ -8,7 +8,7 @@ import { primaryBtn, ghostBtn } from "@/lib/ui";
 import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
 import Screen3CropGoals from "./screens/Screen3CropGoals";
-import Screen4Historical from "./screens/Screen4Historical";
+import SeasonReplay from "./screens/SeasonReplay";
 import Screen5RotationCompare from "./screens/Screen5RotationCompare";
 import Screen6Guidance from "./screens/Screen6Guidance";
 
@@ -93,7 +93,7 @@ export default function Wizard() {
         {step === 3 && (
           <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />
         )}
-        {step === 4 && pin && <Screen4Historical pin={pin} />}
+        {step === 4 && pin && <SeasonReplay pin={pin} />}
         {step === 5 && <Screen5RotationCompare cropGoals={cropGoals} />}
         {step === 6 && <Screen6Guidance pin={pin} cropGoals={cropGoals} />}
       </section>
