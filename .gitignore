@@ -4,3 +4,7 @@
 backend/clip
 web/clip
 submission.md
+demo/shots/
+demo/frames/
+demo/*.mp4
+demo/node_modules

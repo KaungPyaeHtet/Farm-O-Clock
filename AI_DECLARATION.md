@@ -35,8 +35,9 @@ the decision not to use an LLM in the app, reviewing and testing all AI-assisted
 - **Logo:** made with Grok (xAI).
 - **Images in the pitch deck / video:** some were generated with ChatGPT, Claude and Gemini. They are illustrations only and
   are **not** satellite data or real photos of farms. All real data in the app and the charts come from the sources in section 4.
-- **Video:** AI tools (ChatGPT, Claude, Gemini) helped with planning and scripting; the team recorded, edited and narrated it,
-  and the app screen recordings are real.
+- **Video:** AI tools (ChatGPT, Claude, Gemini) helped with planning and scripting. The 30-second pitch video was assembled
+  with Claude Code as code (`demo/pitch.html`, rendered frame by frame by `demo/render.mjs`) from **real screenshots of the live
+  app** (`demo/capture.mjs`); no screen in it is mocked up or AI-generated. Every number shown comes from `reports/README.md`.
 - **Text:** AI helped draft and edit text (pitch, submission, docs); the team reviewed every word and all numbers come from our own evaluations.
 - We do not use NASA logos or imply NASA endorsement.
 
