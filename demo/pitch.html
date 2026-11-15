@@ -3,158 +3,159 @@
 <head>
 <meta charset="utf-8" />
 <title>Farm O'Clock pitch</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Myanmar:wght@600;700&display=block" rel="stylesheet" />
 <style>
-  :root { --bg:#0B140E; --bg2:#12251A; --green:#2F8A3E; --lime:#8FD694; --cream:#F6F8F1; --muted:#9FB3A4; --clay:#C0392B; --sun:#E0A21B; --water:#3A86C8; }
+  :root { --bg:#0B140E; --green:#2F8A3E; --lime:#8FD694; --cream:#F6F8F1; --muted:#9FB3A4; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); font-family: "Plus Jakarta Sans", system-ui, sans-serif; color: var(--cream); }
   #stage { position: absolute; inset: 0; overflow: hidden; }
   .bg { position: absolute; inset: 0; background: radial-gradient(1200px 800px at 70% 40%, #173322 0%, var(--bg) 60%); }
   .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55; }
-  .grid-lines { position: absolute; inset: -200px; background-image: linear-gradient(rgba(143,214,148,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(143,214,148,.06) 1px, transparent 1px); background-size: 80px 80px; }
+  .gridlines { position: absolute; inset: -200px; background-image: linear-gradient(rgba(143,214,148,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(143,214,148,.06) 1px, transparent 1px); background-size: 80px 80px; }
   .scene { position: absolute; inset: 0; opacity: 0; }
   .kicker { font-size: 22px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: var(--lime); }
-  .title { font-size: 92px; line-height: 1.02; font-weight: 800; letter-spacing: -.035em; }
-  .title .w { display: inline-block; will-change: transform; }
-  .sub { font-size: 30px; line-height: 1.35; color: var(--muted); font-weight: 500; max-width: 640px; }
-  .cap { position: absolute; left: 140px; top: 50%; transform: translateY(-50%); width: 760px; }
-  .cap .title { margin: 18px 0 22px; }
-  .hl { color: var(--lime); }
-  /* devices */
+  /* the script, on screen: words light up as they are spoken */
+  .vo { font-weight: 800; letter-spacing: -.035em; line-height: 1.04; }
+  .vo .w { display: inline-block; color: rgba(246,248,241,.18); will-change: transform; }
+  .vo .w.on { color: var(--cream); }
+  .vo .w.hl.on { color: var(--lime); }
+  .cap { position: absolute; left: 130px; top: 50%; transform: translateY(-50%); width: 820px; }
+  .cap .vo { font-size: 84px; margin-top: 18px; }
   .phone { position: absolute; width: 438px; height: 916px; border-radius: 66px; background: #050806; padding: 16px; box-shadow: 0 0 0 2px #2a3a2f, 0 60px 120px rgba(0,0,0,.6), 0 0 120px rgba(47,138,62,.25); }
   .phone .screen { position: relative; width: 406px; height: 884px; border-radius: 52px; overflow: hidden; background: #fff; }
   .phone .notch { position: absolute; top: 14px; left: 50%; width: 120px; height: 32px; margin-left: -60px; border-radius: 20px; background: #050806; z-index: 5; }
   .browser { position: absolute; width: 1240px; border-radius: 22px; overflow: hidden; background: #f3f5ee; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 60px 140px rgba(0,0,0,.65), 0 0 140px rgba(47,138,62,.22); }
   .browser .bar { height: 46px; background: #1b2a20; display: flex; align-items: center; gap: 9px; padding: 0 18px; }
   .browser .dot { width: 13px; height: 13px; border-radius: 50%; }
-  .browser .url { margin-left: 18px; flex: 1; height: 28px; border-radius: 14px; background: #0f1a13; color: #b8c9bc; font-size: 15px; display: flex; align-items: center; padding: 0 16px; gap: 8px; }
+  .browser .url { margin-left: 18px; flex: 1; height: 28px; border-radius: 14px; background: #0f1a13; color: #b8c9bc; font-size: 15px; display: flex; align-items: center; padding: 0 16px; }
   .browser .screen { position: relative; width: 1240px; height: 775px; overflow: hidden; }
   .screen img.layer { position: absolute; left: 0; top: 0; width: 100%; height: auto; opacity: 0; }
-  .cursor { position: absolute; width: 34px; height: 34px; z-index: 20; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .cursor { position: absolute; width: 34px; height: 34px; z-index: 20; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
   .ripple { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 3px solid var(--green); z-index: 19; opacity: 0; }
-  .chip { position: absolute; display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 999px; background: rgba(18,37,26,.78); border: 1px solid rgba(143,214,148,.28); backdrop-filter: blur(14px); font-size: 22px; font-weight: 700; color: var(--cream); white-space: nowrap; box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+  .chip { position: absolute; display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 999px; background: rgba(18,37,26,.82); border: 1px solid rgba(143,214,148,.28); backdrop-filter: blur(14px); font-size: 22px; font-weight: 700; color: var(--cream); white-space: nowrap; box-shadow: 0 20px 40px rgba(0,0,0,.35); opacity: 0; }
   .chip i { width: 12px; height: 12px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 14px var(--lime); }
-  .bigstat { position: absolute; padding: 26px 34px; border-radius: 28px; background: rgba(12,26,17,.86); border: 1px solid rgba(143,214,148,.3); backdrop-filter: blur(16px); box-shadow: 0 30px 60px rgba(0,0,0,.45); }
-  .bigstat b { display: block; font-size: 64px; font-weight: 800; letter-spacing: -.03em; color: var(--lime); line-height: 1; }
-  .bigstat span { display: block; margin-top: 8px; font-size: 21px; color: var(--muted); font-weight: 600; }
-  .scan { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--lime), transparent); box-shadow: 0 0 24px 6px rgba(143,214,148,.6); }
-  /* proof */
-  .proof-row { position: absolute; left: 0; right: 0; top: 330px; display: flex; justify-content: center; gap: 70px; }
-  .pcard { width: 470px; padding: 40px 42px; border-radius: 34px; background: rgba(18,37,26,.7); border: 1px solid rgba(143,214,148,.22); }
-  .pcard .n { font-size: 112px; font-weight: 800; letter-spacing: -.045em; line-height: 1; }
-  .pcard .l { margin-top: 16px; font-size: 25px; color: var(--muted); font-weight: 600; line-height: 1.35; }
-  .bar2 { height: 16px; border-radius: 8px; background: rgba(255,255,255,.08); margin-top: 22px; overflow: hidden; }
-  .bar2 > div { height: 100%; border-radius: 8px; }
-  .logo-ring { stroke-dasharray: 160; }
-  .mm { font-family: "Noto Sans Myanmar", "Plus Jakarta Sans", sans-serif; }
+  .metric { position: absolute; width: 250px; padding: 18px 22px; border-radius: 24px; background: rgba(246,248,241,.97); color: #1d2a20; box-shadow: 0 30px 60px rgba(0,0,0,.45); opacity: 0; }
+  .metric .h { font-size: 18px; font-weight: 700; color: #5d6f62; display: flex; align-items: center; gap: 8px; }
+  .metric .v { font-size: 48px; font-weight: 800; letter-spacing: -.03em; margin-top: 4px; }
+  .metric .v small { font-size: 20px; font-weight: 600; color: #5d6f62; margin-left: 4px; }
+  .metric .tag { position: absolute; top: 16px; right: 16px; font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: #dcefd9; color: #2F8A3E; }
+  .src { position: absolute; font-size: 20px; font-weight: 800; letter-spacing: .2em; color: var(--lime); opacity: 0; }
+  .scan { position: absolute; height: 3px; background: linear-gradient(90deg, transparent, var(--lime), transparent); box-shadow: 0 0 24px 6px rgba(143,214,148,.6); }
+  /* S1 calendar */
+  .cal { position: absolute; left: 50%; top: 560px; width: 1080px; margin-left: -540px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .mon { height: 150px; border-radius: 22px; background: #F6F8F1; color: #1d2a20; padding: 18px 20px; box-shadow: 0 20px 40px rgba(0,0,0,.4); position: relative; overflow: hidden; }
+  .mon b { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+  .mon .ico { position: absolute; right: 18px; bottom: 14px; font-size: 44px; }
+  .mon .ck { position: absolute; inset: 0; }
 </style>
 </head>
 <body>
 <div id="stage">
   <div class="bg"></div>
-  <div class="grid-lines" id="gridlines"></div>
+  <div class="gridlines" id="gridlines"></div>
   <div class="orb" id="orb1" style="width:700px;height:700px;background:#2F8A3E;left:1100px;top:-200px"></div>
   <div class="orb" id="orb2" style="width:600px;height:600px;background:#1d5c8a;left:-200px;top:600px;opacity:.35"></div>
 
-  <!-- S1 hook -->
+  <!-- S1: the broken calendar -->
   <div class="scene" id="s1">
-    <svg id="s1logo" viewBox="0 0 100 100" style="position:absolute;left:910px;top:250px;width:100px;height:100px">
-      <rect width="100" height="100" rx="23" fill="#2F8A3E"/>
-      <path class="logo-ring" id="s1ring" d="M74.47,41.59 A27,27 0 1 1 61.41,28.53" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/>
-      <circle cx="69.09" cy="33.91" r="5" fill="#fff"/>
-      <path d="M50,53 L50,36" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-      <path d="M50,46 C48,40 43,37 36,38 C37,44 43,47 50,46 Z" fill="#fff"/>
-      <path d="M50,41 C52,36 56,34 61,35 C60,40 55,42 50,41 Z" fill="#fff"/>
-      <circle cx="50" cy="53" r="5" fill="#fff"/>
-    </svg>
-    <div id="s1q" class="title" style="position:absolute;left:0;right:0;top:420px;text-align:center;font-size:120px"></div>
-    <div id="s1sub" class="sub" style="position:absolute;left:0;right:0;top:590px;text-align:center;max-width:none;font-size:36px">Every season, every farm. One decision that sets the whole year.</div>
+    <div id="soil" style="position:absolute;inset:0;background:radial-gradient(1400px 900px at 50% 60%, #4a3322 0%, #24170f 70%);opacity:0"></div>
+    <svg id="cracks" width="1920" height="1080" style="position:absolute;inset:0;opacity:0"></svg>
+    <div id="team" class="kicker" style="position:absolute;left:0;right:0;top:150px;text-align:center;font-size:26px">Hi, we're Team NorthStar</div>
+    <div id="s1vo" class="vo" style="position:absolute;left:160px;right:160px;top:225px;text-align:center;font-size:76px"></div>
+    <div class="cal" id="cal"></div>
   </div>
 
-  <!-- S2 pin -->
+  <!-- S2: logo -->
   <div class="scene" id="s2">
-    <div class="cap"><div class="kicker">Step 1 · Your field</div><div class="title" data-words="Drop a pin. Anywhere on Earth."></div><div class="sub">Search a village or tap the satellite map. Water and towns are checked for you.</div></div>
-    <div class="phone" id="s2phone" style="left:1230px;top:82px"><div class="notch"></div><div class="screen">
-      <img class="layer" src="shots/phone-01-map-world.png" /><img class="layer" src="shots/phone-02-map-search.png" /><img class="layer" src="shots/phone-03-map-pin.png" />
-      <div class="ripple"></div><svg class="cursor" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="#fff" stroke="#0B140E" stroke-width="1.6" stroke-linejoin="round"/></svg>
-    </div></div>
-    <div class="chip" id="s2chip" style="left:1000px;top:760px"><i></i>Maubin, Ayeyarwady, Myanmar</div>
+    <svg id="s2logo" viewBox="0 0 100 100" style="position:absolute;left:560px;top:370px;width:220px;height:220px"><use href="#logo" /></svg>
+    <div id="s2vo" class="vo" style="position:absolute;left:830px;top:390px;font-size:76px;width:900px"></div>
+    <div id="s2name" style="position:absolute;left:830px;top:470px;font-size:120px;font-weight:800;letter-spacing:-.045em">Farm O'Clock</div>
   </div>
 
-  <!-- S3 past seasons -->
+  <!-- S3: search + live NASA data -->
   <div class="scene" id="s3">
-    <div class="cap" style="top:96px;transform:none;width:1700px"><div class="kicker">NASA POWER · 1985 → today</div><div class="title" style="font-size:78px" data-words="20 years of seasons, replayed."></div></div>
-    <div class="browser" id="s3b" style="left:560px;top:262px"><div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><div class="url">🔒 farm-oclock-five.vercel.app</div></div>
-      <div class="screen"><div id="s3cam" style="position:absolute;inset:0;transform-origin:35% 45%"><img class="layer" src="shots/desk-06-past.png" style="opacity:1" />
-        <div id="s3mask" style="position:absolute;background:rgb(248,251,239)"></div><div class="scan" id="s3scan"></div>
-      </div></div></div>
-    <div class="chip" id="s3c1" style="left:150px;top:520px"><i></i>Drought</div>
-    <div class="chip" id="s3c2" style="left:150px;top:600px"><i style="background:#3A86C8;box-shadow:0 0 14px #3A86C8"></i>Flooding</div>
-    <div class="chip" id="s3c3" style="left:150px;top:680px"><i style="background:#E0A21B;box-shadow:0 0 14px #E0A21B"></i>Heat</div>
-    <div class="sub" id="s3sub" style="position:absolute;left:150px;top:780px;width:360px;font-size:24px">14 sowing weeks × 20 past seasons, rated at your exact field.</div>
-  </div>
-
-  <!-- S4 sowing -->
-  <div class="scene" id="s4">
-    <div class="cap"><div class="kicker">Step 5 · Sowing date</div><div class="title" data-words="Pick your week. See the odds."></div><div class="sub">Real upcoming dates, with how often that week went well in the past 20 seasons.</div></div>
-    <div class="phone" id="s4phone" style="left:1230px;top:82px"><div class="notch"></div><div class="screen">
-      <img class="layer" src="shots/phone-08-sow-00.png" /><img class="layer" src="shots/phone-08-sow-01.png" /><img class="layer" src="shots/phone-08-sow-02.png" /><img class="layer" src="shots/phone-08-sow-03.png" /><img class="layer" src="shots/phone-08-sow-04.png" /><img class="layer" src="shots/phone-08-sow-05.png" />
-      <div class="ripple"></div><svg class="cursor" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="#fff" stroke="#0B140E" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    <div class="cap"><div class="kicker">Live NASA data · your exact field</div><div id="s3vo" class="vo"></div></div>
+    <div class="phone" id="s3phone" style="left:1250px;top:82px"><div class="notch"></div><div class="screen">
+      <img class="layer" src="shots/phone-01-map-world.png" /><img class="layer" src="shots/phone-02-map-search.png" /><img class="layer" src="shots/phone-03-map-pin.png" /><img class="layer" src="shots/phone-04-conditions.png" />
+      <div class="ripple"></div><svg class="cursor" viewBox="0 0 24 24"><use href="#arrow" /></svg>
     </div></div>
-    <div class="bigstat" id="s4stat" style="left:960px;top:640px"><b>5 in 10</b><span>seasons go well · sown 30 Jul</span></div>
+    <div class="metric" id="m1" style="left:930px;top:180px"><div class="h">💧 Soil moisture</div><div class="v">77<small>%</small></div><span class="tag">Good</span></div>
+    <div class="metric" id="m2" style="left:1600px;top:300px"><div class="h">🌧 Rain</div><div class="v">4.4<small>mm/day</small></div></div>
+    <div class="metric" id="m3" style="left:960px;top:560px"><div class="h">🌡 Daytime heat</div><div class="v">31.9<small>°C</small></div></div>
+    <div class="metric" id="m4" style="left:1620px;top:690px"><div class="h">⛰ Slope</div><div class="v">0<small>° flat</small></div></div>
+    <div class="src" id="s3src" style="left:1150px;top:1015px">NASA POWER · SRTM ELEVATION</div>
   </div>
 
-  <!-- S5 what-if -->
+  <!-- S4: goals → 20-season replay → sowing window -->
+  <div class="scene" id="s4">
+    <div class="cap" style="top:96px;transform:none;width:1130px"><div class="kicker">20-season replay</div><div id="s4vo" class="vo" style="font-size:60px"></div></div>
+    <div class="phone" id="s4crop" style="left:1290px;top:82px"><div class="notch"></div><div class="screen">
+      <img class="layer" src="shots/phone-05-crop-a.png" /><img class="layer" src="shots/phone-05-crop-b.png" /><img class="layer" src="shots/phone-05-crop-c.png" />
+      <div class="ripple"></div><svg class="cursor" viewBox="0 0 24 24"><use href="#arrow" /></svg>
+    </div></div>
+    <div class="browser" id="s4b" style="left:200px;top:340px;transform-origin:0 0"><div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><div class="url">🔒 farm-oclock-five.vercel.app</div></div>
+      <div class="screen"><div id="s4cam" style="position:absolute;inset:0;transform-origin:35% 45%"><img class="layer" src="shots/desk-06-past.png" style="opacity:1" />
+        <div id="s4mask" style="position:absolute;background:rgb(248,251,239)"></div><div class="scan" id="s4scan"></div></div></div></div>
+    <div class="phone" id="s4sow" style="left:1380px;top:150px"><div class="notch"></div><div class="screen">
+      <img class="layer" src="shots/phone-08-sow-00.png" /><img class="layer" src="shots/phone-08-sow-01.png" /><img class="layer" src="shots/phone-08-sow-02.png" /><img class="layer" src="shots/phone-08-sow-03.png" /><img class="layer" src="shots/phone-08-sow-04.png" /><img class="layer" src="shots/phone-08-sow-05.png" />
+      <svg class="cursor" viewBox="0 0 24 24"><use href="#arrow" /></svg><div class="ripple"></div>
+    </div></div>
+    <div class="chip" id="s4chip" style="left:120px;top:1000px"><i></i>Tested at 73 sites: 36 % low-risk seasons vs 28 % for a random week</div>
+    <div class="chip" id="s4win" style="left:1130px;top:930px"><i></i>Safest window: 30 Jul · 5 in 10 seasons go well</div>
+  </div>
+
+  <!-- S5: stress-test rotations → plan → share -->
   <div class="scene" id="s5">
-    <div class="cap" style="top:60px;transform:none;width:1700px"><div class="kicker">Step 6 · 3 possible futures</div><div class="title" style="font-size:78px" data-words="What if it gets drier &amp; hotter?"></div></div>
-    <div class="browser" id="s5b" style="left:340px;top:236px"><div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><div class="url">🔒 farm-oclock-five.vercel.app</div></div>
-      <div class="screen" id="s5screen">
-        <div id="s5cam" style="position:absolute;left:0;top:0;width:1240px;transform-origin:0 0">
-          <img class="layer" src="shots/desk-09-rot-00.png" /><img class="layer" src="shots/desk-09-rot-01.png" /><img class="layer" src="shots/desk-09-rot-02.png" /><img class="layer" src="shots/desk-09-rot-03.png" /><img class="layer" src="shots/desk-09-rot-04.png" />
-          <div class="ripple"></div><svg class="cursor" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="#fff" stroke="#0B140E" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        </div>
-      </div></div>
-    <div class="chip" id="s5chip" style="left:1290px;top:840px"><i></i>Best plan switches to Water-saving</div>
+    <div class="cap" style="top:70px;transform:none;width:1700px"><div class="kicker">3-year rotations · extreme weather</div><div id="s5vo" class="vo" style="font-size:66px"></div></div>
+    <div class="browser" id="s5b" style="left:340px;top:270px"><div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><div class="url">🔒 farm-oclock-five.vercel.app</div></div>
+      <div class="screen"><div id="s5cam" style="position:absolute;left:0;top:0;width:1240px;transform-origin:0 0">
+        <img class="layer" src="shots/desk-09-rot-00.png" /><img class="layer" src="shots/desk-09-rot-01.png" /><img class="layer" src="shots/desk-09-rot-02.png" /><img class="layer" src="shots/desk-09-rot-03.png" /><img class="layer" src="shots/desk-09-rot-04.png" /><img class="layer" src="shots/desk-10-plan.png" />
+        <div class="ripple"></div><svg class="cursor" viewBox="0 0 24 24"><use href="#arrow" /></svg></div></div></div>
+    <div class="chip" id="s5chip" style="left:1260px;top:960px"><i></i>Plans re-rank live: Water-saving wins</div>
+    <img id="s5card" src="shots/sharecard.png" style="position:absolute;left:1400px;top:250px;width:470px;border-radius:24px;box-shadow:0 50px 100px rgba(0,0,0,.6);opacity:0" />
   </div>
 
-  <!-- S6 plan -->
+  <!-- S6: share card over thriving farmland → logo -->
   <div class="scene" id="s6">
-    <div class="cap"><div class="kicker">Step 7 · Your plan</div><div class="title" style="font-size:84px;line-height:1.15" data-words="Your plan, in English &amp; မြန်မာ."></div><div class="sub">Sow date, rotation, the why, and a field checklist. Share it as a picture.</div></div>
-    <div id="s6flip" style="position:absolute;left:1230px;top:82px;width:438px;height:916px;perspective:2200px">
-      <div class="phone" id="s6en" style="left:0;top:0;backface-visibility:hidden"><div class="notch"></div><div class="screen"><img class="layer" src="shots/phone-10-plan.png" style="opacity:1" /></div></div>
-      <div class="phone" id="s6my" style="left:0;top:0;backface-visibility:hidden"><div class="notch"></div><div class="screen"><img class="layer" src="shots/phone-11-plan-my.png" style="opacity:1" /></div></div>
-    </div>
-    <div class="chip" id="s6chip" style="left:960px;top:820px"><i></i><span id="s6lang">English</span></div>
-  </div>
-
-  <!-- S7 proof -->
-  <div class="scene" id="s7">
-    <div style="position:absolute;left:0;right:0;top:150px;text-align:center"><div class="kicker">Backtested, not guessed</div><div class="title" style="font-size:76px;margin-top:16px" data-words="Better weeks. Measured."></div></div>
-    <div class="proof-row">
-      <div class="pcard" id="p1"><div class="n"><span id="n36">0</span><span style="font-size:60px">%</span></div><div class="l">low-risk seasons with our week<br/>vs <b style="color:#cfd9d1">28 %</b> for a random week</div>
-        <div class="bar2"><div id="b36" style="background:var(--lime);width:0"></div></div><div class="bar2" style="margin-top:10px"><div id="b28" style="background:#5d6f62;width:0"></div></div></div>
-      <div class="pcard" id="p2"><div class="n"><span id="n73">0</span></div><div class="l">test sites on 5 continents,<br/>scored on held-out years</div></div>
-      <div class="pcard" id="p3"><div class="n" style="font-size:84px;line-height:1.1">Open<br/>data</div><div class="l">NASA POWER · MODIS · SRTM.<br/>No AI in the app. Any phone.</div></div>
-    </div>
-  </div>
-
-  <!-- S8 end -->
-  <div class="scene" id="s8">
-    <svg id="s8logo" viewBox="0 0 100 100" style="position:absolute;left:500px;top:330px;width:200px;height:200px">
-      <rect width="100" height="100" rx="23" fill="#2F8A3E"/>
-      <path class="logo-ring" id="s8ring" d="M74.47,41.59 A27,27 0 1 1 61.41,28.53" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/>
-      <circle cx="69.09" cy="33.91" r="5" fill="#fff"/>
-      <path d="M50,53 L50,36" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-      <path d="M50,46 C48,40 43,37 36,38 C37,44 43,47 50,46 Z" fill="#fff"/>
-      <path d="M50,41 C52,36 56,34 61,35 C60,40 55,42 50,41 Z" fill="#fff"/>
-      <circle cx="50" cy="53" r="5" fill="#fff"/>
+    <svg id="farm" width="1920" height="1080" viewBox="0 0 1920 1080" style="position:absolute;inset:0">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f2a1c"/><stop offset=".55" stop-color="#2d6a3b"/><stop offset="1" stop-color="#d9c27a"/></linearGradient>
+        <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff3c2"/><stop offset=".35" stop-color="#f6d77a" stop-opacity=".9"/><stop offset="1" stop-color="#f6d77a" stop-opacity="0"/></radialGradient>
+        <pattern id="rows1" width="46" height="46" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)"><rect width="46" height="46" fill="#3e9a48"/><rect width="46" height="14" y="16" fill="#2f7d39"/></pattern>
+        <pattern id="rows2" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(6)"><rect width="34" height="34" fill="#57b05c"/><rect width="34" height="10" y="12" fill="#3f9447"/></pattern>
+        <pattern id="rows3" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(-3)"><rect width="60" height="60" fill="#2a7a35"/><rect width="60" height="18" y="20" fill="#226a2c"/></pattern>
+      </defs>
+      <rect width="1920" height="1080" fill="url(#sky)"/>
+      <circle id="sunc" cx="1460" cy="430" r="420" fill="url(#sun)"/>
+      <g id="hill1"><path d="M-100 640 C 300 540, 700 600, 1000 560 S 1700 520, 2050 600 L 2050 1100 L -100 1100 Z" fill="url(#rows2)"/></g>
+      <g id="hill2"><path d="M-100 760 C 400 660, 900 740, 1300 690 S 1800 700, 2050 720 L 2050 1100 L -100 1100 Z" fill="url(#rows1)"/></g>
+      <g id="hill3"><path d="M-100 900 C 500 820, 1100 900, 1500 850 S 1900 860, 2050 880 L 2050 1100 L -100 1100 Z" fill="url(#rows3)"/></g>
     </svg>
-    <div id="s8name" style="position:absolute;left:740px;top:350px;font-size:110px;font-weight:800;letter-spacing:-.04em">Farm O'Clock</div>
-    <div id="s8tag" style="position:absolute;left:744px;top:480px;font-size:34px;color:var(--muted);font-weight:600">Know when to sow. See what to rotate.</div>
-    <div id="s8url" style="position:absolute;left:0;right:0;top:680px;text-align:center"><span style="display:inline-block;padding:18px 34px;border-radius:999px;background:var(--green);font-size:34px;font-weight:800;box-shadow:0 0 60px rgba(47,138,62,.6)">farm-oclock-five.vercel.app</span></div>
-    <div id="s8foot" style="position:absolute;left:0;right:0;top:820px;text-align:center;font-size:24px;color:var(--muted);font-weight:600;letter-spacing:.06em">NASA SPACE APPS 2026 · FIELD SHIFT · TEAM NORTHSTAR</div>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(8,18,11,.0) 30%, rgba(8,18,11,.6) 70%)"></div>
+    <img id="s6card" src="shots/sharecard.png" style="position:absolute;left:0;top:0;width:470px;border-radius:24px;box-shadow:0 60px 120px rgba(0,0,0,.55);transform-origin:50% 50%" />
+    <div id="s6lock" style="position:absolute;left:1000px;top:300px;width:860px">
+      <div style="display:flex;align-items:center;gap:28px"><svg viewBox="0 0 100 100" style="width:130px;height:130px"><use href="#logo" /></svg><div style="font-size:96px;font-weight:800;letter-spacing:-.045em">Farm O'Clock</div></div>
+      <div id="s6vo" class="vo" style="font-size:44px;margin-top:30px;width:840px"></div>
+      <div style="margin-top:34px;font-size:22px;font-weight:800;letter-spacing:.18em;color:var(--lime)">POWERED BY OPEN NASA EARTH DATA</div>
+      <div style="margin-top:22px;display:inline-block;padding:14px 28px;border-radius:999px;background:var(--green);font-size:28px;font-weight:800;box-shadow:0 0 50px rgba(47,138,62,.6)">farm-oclock-five.vercel.app</div>
+      <div style="margin-top:22px;font-size:22px;color:#cfe0d2;font-weight:700;letter-spacing:.06em">TEAM NORTHSTAR · NASA SPACE APPS 2026 · FIELD SHIFT</div>
+    </div>
   </div>
+
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <g id="logo">
+        <rect width="100" height="100" rx="23" fill="#2F8A3E"/>
+        <path d="M74.47,41.59 A27,27 0 1 1 61.41,28.53" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/>
+        <circle cx="69.09" cy="33.91" r="5" fill="#fff"/>
+        <path d="M50,53 L50,36" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+        <path d="M50,46 C48,40 43,37 36,38 C37,44 43,47 50,46 Z" fill="#fff"/>
+        <path d="M50,41 C52,36 56,34 61,35 C60,40 55,42 50,41 Z" fill="#fff"/>
+        <circle cx="50" cy="53" r="5" fill="#fff"/>
+      </g>
+      <path id="arrow" d="M4 2l16 9-7 2-3 7z" fill="#fff" stroke="#0B140E" stroke-width="1.6" stroke-linejoin="round"/>
+    </defs>
+  </svg>
 </div>
 
 <script>
@@ -167,215 +168,207 @@ const io = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const oB = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
-// split titles into words
-$$("[data-words]").forEach((el) => {
-  el.innerHTML = el.dataset.words.split(" ").map((w) => `<span class="w${/[\u1000-\u109F]/.test(w) ? " mm" : ""}">${w}</span>`).join(" ");
+// ---------------- the script (voiceover timing; words light up as spoken) ----------------
+// [element, start, end, text] · words in *stars* are highlighted. Keep in sync with demo/SCRIPT.md
+const VO = [
+  ["#s1vo", 1.5, 4.8, "Climate change broke the farming *calendar.* Now farmers *gamble* every harvest."],
+  ["#s2vo", 5.15, 6.2, "So we built"],
+  ["#s3vo", 7.4, 10.6, "Search any field, and *live* *NASA* *data* reads it instantly."],
+  ["#s4vo", 12.0, 16.4, "Pick your crop and goals. Our *20-season* *replay* finds your *safest* *sowing* *window.*"],
+  ["#s5vo", 18.3, 21.9, "Stress-test rotations against *extreme* *weather,* and get a plan you can *share.*"],
+  ["#s6vo", 25.6, 29.2, "Because when the climate shifts, knowing *when* *to* *plant* changes everything."],
+];
+for (const [sel, , , text] of VO) {
+  $(sel).innerHTML = text.split(" ").map((w) => {
+    const hl = /^\*.*\*[.,]?$/.test(w);
+    return `<span class="w${hl ? " hl" : ""}">${w.replace(/\*/g, "")}</span>`;
+  }).join(" ");
+}
+function voWords(t) {
+  for (const [sel, a, b] of VO) {
+    const ws = $$(".w", $(sel));
+    ws.forEach((w, i) => {
+      const at = a + ((b - a) * i) / ws.length;
+      const x = oQ(P(t, at - 0.05, at + 0.25));
+      w.classList.toggle("on", t >= at);
+      w.style.transform = `translateY(${(1 - x) * 18}px)`;
+    });
+  }
+}
+
+// ---------------- S1 calendar + cracks ----------------
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const ICONS = ["❄️", "🌱", "🌱", "🌧", "🌧", "🌾", "🌾", "☀️", "🌾", "🍂", "🍂", "❄️"];
+$("#cal").innerHTML = MONTHS.map((m, i) => `<div class="mon"><b>${m}</b><span class="ico">${ICONS[i]}</span><svg class="ck" viewBox="0 0 160 150"><path d="" fill="none" stroke="#3b2a1d" stroke-width="2.4" stroke-linecap="round"/></svg></div>`).join("");
+$$(".mon .ck path").forEach((p) => {
+  let x = 20 + rnd() * 120, y = 0, d = `M${x} ${y}`;
+  for (let k = 0; k < 7; k++) { x += (rnd() - 0.5) * 50; y += 22; d += ` L${x.toFixed(1)} ${y}`; }
+  p.setAttribute("d", d); p.style.strokeDasharray = 400;
 });
-const S1Q = "When should I sow?";
+const tileFall = MONTHS.map(() => ({ vx: (rnd() - 0.5) * 500, rot: (rnd() - 0.5) * 70, delay: rnd() * 0.5 }));
+{
+  let svg = "";
+  for (let c = 0; c < 46; c++) {
+    let x = rnd() * 1920, y = 300 + rnd() * 780, ang = rnd() * Math.PI * 2, d = `M${x.toFixed(0)} ${y.toFixed(0)}`, len = 0;
+    for (let k = 0; k < 14; k++) { ang += (rnd() - 0.5) * 1.1; const s = 18 + rnd() * 34; x += Math.cos(ang) * s; y += Math.sin(ang) * s; len += s; d += ` L${x.toFixed(0)} ${y.toFixed(0)}`; }
+    svg += `<path d="${d}" fill="none" stroke="#120b06" stroke-width="${(1.5 + rnd() * 3.5).toFixed(1)}" stroke-linecap="round" stroke-dasharray="${len.toFixed(0)}" stroke-dashoffset="${len.toFixed(0)}" data-len="${len.toFixed(0)}" data-at="${(rnd() * 0.9).toFixed(2)}"/>`;
+  }
+  $("#cracks").innerHTML = svg;
+}
 
-// scene windows [start, end]
-// scenes hand over one after the other (outgoing blurs/pushes away, then the next comes in)
-const SC = { s1: [0, 3.2], s2: [3.2, 7.2], s3: [7.2, 10.8], s4: [10.8, 14.8], s5: [14.8, 19.8], s6: [19.8, 23.4], s7: [23.4, 26.8], s8: [26.8, 31] };
-function sceneAlpha(id, t) {
-  const [a, b] = SC[id];
-  return Math.min(P(t, a, a + 0.22), 1 - P(t, b - 0.22, b));
-}
+// ---------------- shared helpers ----------------
+const SC = { s1: [0, 5.0], s2: [5.0, 7.2], s3: [7.2, 11.8], s4: [11.8, 18.1], s5: [18.1, 24.0], s6: [24.0, 31] };
 function sceneFx(id, t) {
-  const [a, b] = SC[id];
+  const [a, b] = SC[id], el = document.getElementById(id);
   const out = P(t, b - 0.22, b), inn = 1 - P(t, a, a + 0.22);
-  const el = document.getElementById(id);
+  el.style.opacity = Math.min(P(t, a, a + 0.22), 1 - out);
   el.style.filter = out || inn ? `blur(${(out + inn) * 14}px)` : "none";
-  if (id !== "s1") el.style.transform = `scale(${1 + out * 0.06 - inn * 0.04})`;
+  el.style.transform = `scale(${1 + out * 0.06 - inn * 0.04})`;
 }
-function words(scene, t, start, stagger = 0.07) {
-  $$(".w", scene).forEach((w, i) => {
-    const x = oQ(P(t, start + i * stagger, start + i * stagger + 0.55));
-    w.style.opacity = x;
-    w.style.transform = `translateY(${(1 - x) * 46}px)`;
-    w.style.filter = `blur(${(1 - x) * 8}px)`;
-  });
-  const k = $(".kicker", scene), s = $(".sub", scene);
-  if (k) { const x = oC(P(t, start - 0.15, start + 0.35)); k.style.opacity = x; k.style.transform = `translateX(${(1 - x) * -30}px)`; }
-  if (s) { const x = oC(P(t, start + 0.45, start + 1.0)); s.style.opacity = x; s.style.transform = `translateY(${(1 - x) * 20}px)`; }
-}
-// crossfade image layers by a fractional index
 function layers(screen, f) {
-  $$("img.layer", screen).forEach((im, i) => { im.style.opacity = clamp(1 - Math.abs(f - i)) ; });
-  // keep the lower one fully opaque underneath for clean crossfades
-  const lo = Math.floor(f);
   const ims = $$("img.layer", screen);
-  if (ims[lo]) ims[lo].style.opacity = 1;
+  ims.forEach((im, i) => (im.style.opacity = clamp(1 - Math.abs(f - i))));
+  if (ims[Math.floor(f)]) ims[Math.floor(f)].style.opacity = 1;
 }
 function cursor(screen, x, y, show, press = 0) {
-  const c = $(".cursor", screen), r = $(".ripple", screen);
-  c.style.left = x - 6 + "px"; c.style.top = y - 4 + "px"; c.style.opacity = show;
-  c.style.transform = `scale(${1 - press * 0.18})`;
+  const c = $(".cursor", screen);
+  c.style.left = x - 6 + "px"; c.style.top = y - 4 + "px"; c.style.opacity = show; c.style.transform = `scale(${1 - clamp(press) * 0.18})`;
 }
 function ripple(screen, x, y, p) {
   const r = $(".ripple", screen);
-  r.style.left = x + "px"; r.style.top = y + "px";
-  r.style.opacity = p > 0 && p < 1 ? (1 - p) * 0.9 : 0;
-  r.style.transform = `scale(${1 + p * 4})`;
+  r.style.left = x + "px"; r.style.top = y + "px"; r.style.opacity = p > 0 && p < 1 ? (1 - p) * 0.9 : 0; r.style.transform = `scale(${1 + p * 4})`;
 }
-function device(el, t, a, fromX, toX, rot = 0) {
-  const x = oQ(P(t, a, a + 0.9));
-  el.style.transform = `translateX(${(1 - x) * (fromX - toX)}px) rotate(${(1 - x) * rot}deg) scale(${0.92 + 0.08 * x})`;
-}
-function chip(el, t, a, dy = 24) {
+function pop(el, t, a, dy = 30) {
   const x = oB(P(t, a, a + 0.5));
-  el.style.opacity = clamp(x);
-  el.style.transform = `translateY(${(1 - x) * dy}px) scale(${0.9 + 0.1 * clamp(x)})`;
+  el.style.opacity = clamp(x * 1.4); el.style.transform = `translateY(${(1 - x) * dy}px) scale(${0.85 + 0.15 * clamp(x)})`;
 }
+function slideIn(el, t, a, fromX, rot = 6) {
+  const x = oQ(P(t, a, a + 0.9));
+  el.style.transform = `translateX(${(1 - x) * fromX}px) rotate(${(1 - x) * rot}deg) scale(${0.92 + 0.08 * x})`;
+}
+function path(t, pts) {
+  let p = [pts[0][1], pts[0][2]];
+  for (let i = 1; i < pts.length; i++) if (t >= pts[i - 1][0]) { const x = io(P(t, pts[i - 1][0], pts[i][0])); p = [lerp(pts[i - 1][1], pts[i][1], x), lerp(pts[i - 1][2], pts[i][2], x)]; }
+  return p;
+}
+const kP = 406 / 390, kD = 1240 / 1440;
 
 function seek(t) {
-  // background drift
   $("#orb1").style.transform = `translate(${Math.sin(t * 0.35) * 120}px, ${Math.cos(t * 0.27) * 80}px)`;
   $("#orb2").style.transform = `translate(${Math.cos(t * 0.3) * 140}px, ${Math.sin(t * 0.22) * 60}px)`;
   $("#gridlines").style.transform = `translate(${(t * 12) % 80}px, ${(t * 8) % 80}px)`;
-  for (const id in SC) { $("#" + id).style.opacity = sceneAlpha(id, t); sceneFx(id, t); }
+  for (const id in SC) sceneFx(id, t);
+  voWords(t);
 
-  // ---- S1 hook
+  // ---- S1: team hello → calendar cracks and falls onto dry soil
   {
-    const s = $("#s1");
-    const lg = oB(P(t, 0.1, 0.8));
-    $("#s1logo").style.transform = `scale(${lg}) rotate(${(1 - clamp(lg)) * -40}deg)`;
-    $("#s1ring").style.strokeDashoffset = 160 * (1 - io(P(t, 0.3, 1.2)));
-    const n = Math.round(S1Q.length * P(t, 0.7, 1.7));
-    $("#s1q").innerHTML = S1Q.slice(0, n) + `<span style="color:var(--lime);opacity:${Math.floor(t * 3) % 2 || n < S1Q.length ? 1 : 0}">|</span>`;
-    const sx = oC(P(t, 1.8, 2.4));
-    $("#s1sub").style.opacity = sx; $("#s1sub").style.transform = `translateY(${(1 - sx) * 20}px)`;
-    s.style.transform = `scale(${1 + P(t, 2.4, 3.2) * 0.08})`;
+    const tm = oC(P(t, 0.15, 0.6)); $("#team").style.opacity = tm * (1 - P(t, 3.9, 4.4)); $("#team").style.transform = `translateY(${(1 - tm) * 16}px)`;
+    $$(".mon").forEach((m, i) => {
+      const inn = oB(P(t, 0.1 + i * 0.04, 0.6 + i * 0.04));
+      const shake = P(t, 2.4, 3.0) * (1 - P(t, 3.2, 3.3)) * Math.sin(t * 70 + i) * 4;
+      const f = tileFall[i], fall = Math.max(0, t - 3.25 - f.delay);
+      m.style.opacity = clamp(inn) * (1 - P(t, 4.2, 4.8));
+      m.style.transform = `translate(${shake + f.vx * fall * 0.6}px, ${(1 - inn) * 40 + 900 * fall * fall}px) rotate(${f.rot * fall * 1.5}deg)`;
+    });
+    $$(".mon .ck path").forEach((p) => (p.style.strokeDashoffset = 400 * (1 - io(P(t, 2.3, 3.2)))));
+    $("#soil").style.opacity = P(t, 2.9, 3.8);
+    $("#cracks").style.opacity = P(t, 3.0, 3.3);
+    $$("#cracks path").forEach((p) => { const a = 3.0 + +p.dataset.at; p.setAttribute("stroke-dashoffset", (+p.dataset.len * (1 - oC(P(t, a, a + 0.8)))).toFixed(0)); });
+    $("#s1").style.transform += ` translateY(${P(t, 3.3, 3.7) * (1 - P(t, 3.7, 3.9)) * Math.sin(t * 90) * 6}px)`;
   }
-  // ---- S2 pin drop
+  // ---- S2: logo
   {
-    const s = $("#s2"), a = SC.s2[0], ph = $("#s2phone"), sc = $(".screen", ph);
-    words(s, t, a + 0.2);
-    device(ph, t, a, 1950, 1230, 8);
-    // 0 world, 1 search (typing), 2 pin
-    const f = P(t, a + 1.3, a + 1.6) + P(t, a + 2.3, a + 2.55);
-    layers(sc, f);
-    const k = 406 / 390; // css → screen px
-    // cursor: to the search box, then to the first result, then rests near the pin
-    const pts = [[300, 520], [140, 70], [140, 70], [150, 95], [196, 360]];
-    const seg = [a + 0.6, a + 1.1, a + 1.6, a + 2.1, a + 2.6, a + 3.2];
-    let cx = pts[0][0], cy = pts[0][1];
-    for (let i = 0; i < pts.length - 1; i++) {
-      const x = io(P(t, seg[i], seg[i + 1]));
-      if (t >= seg[i]) { cx = lerp(pts[i][0], pts[i + 1][0], x); cy = lerp(pts[i][1], pts[i + 1][1], x); }
-    }
-    cursor(sc, cx * k, cy * k, P(t, a + 0.6, a + 0.8) * (1 - P(t, a + 3.4, a + 3.6)), P(t, a + 2.2, a + 2.3) * (1 - P(t, a + 2.3, a + 2.45)));
-    ripple(sc, 150 * k, 95 * k, P(t, a + 2.25, a + 2.8));
-    // pin pulse on the map
-    chip($("#s2chip"), t, a + 2.7);
-    $("#s2chip").style.left = 1000 + "px";
+    const a = SC.s2[0];
+    const lg = oB(P(t, a + 0.05, a + 0.7));
+    $("#s2logo").style.transform = `scale(${lg}) rotate(${(1 - clamp(lg)) * -50}deg)`;
+    const nx = oQ(P(t, a + 0.55, a + 1.2));
+    $("#s2name").style.opacity = nx; $("#s2name").style.transform = `translateX(${(1 - nx) * 80}px)`;
+    $("#s2").style.transform += ` scale(${1 + P(t, a, SC.s2[1]) * 0.05})`;
   }
-  // ---- S3 past seasons grid reveal
+  // ---- S3: search → pin → conditions, metric cards pop out
   {
-    const s = $("#s3"), a = SC.s3[0], b = $("#s3b");
-    words(s, t, a + 0.15);
-    const bx = oQ(P(t, a, a + 1.0));
+    const a = SC.s3[0], ph = $("#s3phone"), sc = $(".screen", ph);
+    $(".kicker", $("#s3")).style.opacity = oC(P(t, a + 0.1, a + 0.5));
+    slideIn(ph, t, a, 700);
+    layers(sc, P(t, a + 0.9, a + 1.1) + P(t, a + 1.6, a + 1.8) + P(t, a + 2.3, a + 2.6));
+    const [cx, cy] = path(t, [[a + 0.3, 300, 520], [a + 0.8, 140, 70], [a + 1.3, 150, 95], [a + 1.9, 300, 790], [a + 2.6, 300, 860]]);
+    cursor(sc, cx * kP, cy * kP, P(t, a + 0.3, a + 0.5) * (1 - P(t, a + 2.4, a + 2.6)), P(t, a + 1.25, a + 1.35) * (1 - P(t, a + 1.35, a + 1.5)) + P(t, a + 2.05, a + 2.15) * (1 - P(t, a + 2.15, a + 2.3)));
+    ripple(sc, t < a + 1.8 ? 150 * kP : 300 * kP, t < a + 1.8 ? 95 * kP : 790 * kP, t < a + 1.8 ? P(t, a + 1.3, a + 1.8) : P(t, a + 2.1, a + 2.6));
+    ["#m1", "#m2", "#m3", "#m4"].forEach((id, i) => pop($(id), t, a + 2.7 + i * 0.18, 50));
+    $("#s3src").style.opacity = oC(P(t, a + 3.3, a + 3.8));
+  }
+  // ---- S4: goals → grid lights up → drag the sowing pin
+  {
+    const a = SC.s4[0];
+    $(".kicker", $("#s4")).style.opacity = oC(P(t, a + 0.1, a + 0.5));
+    const crop = $("#s4crop"), sc = $(".screen", crop);
+    crop.style.opacity = 1 - P(t, a + 1.9, a + 2.2);
+    slideIn(crop, t, a, 700);
+    layers(sc, P(t, a + 0.75, a + 0.85) + P(t, a + 1.35, a + 1.45));
+    const [cx, cy] = path(t, [[a + 0.3, 250, 650], [a + 0.7, 55, 250], [a + 1.2, 101, 445], [a + 1.7, 257, 800]]);
+    cursor(sc, cx * kP, cy * kP, P(t, a + 0.3, a + 0.45), P(t, a + 0.7, a + 0.78) * (1 - P(t, a + 0.78, a + 0.9)) + P(t, a + 1.3, a + 1.38) * (1 - P(t, a + 1.38, a + 1.5)) + P(t, a + 1.75, a + 1.82));
+    ripple(sc, t < a + 1.2 ? 55 * kP : 101 * kP, t < a + 1.2 ? 250 * kP : 445 * kP, t < a + 1.2 ? P(t, a + 0.75, a + 1.2) : P(t, a + 1.35, a + 1.8));
+    const b = $("#s4b"), bx = oQ(P(t, a + 1.9, a + 2.7));
+    b.style.opacity = P(t, a + 1.9, a + 2.2);
+    b.style.transform = `translateY(${(1 - bx) * 300}px) scale(${0.88 * (0.94 + 0.06 * bx)})`;
+    const gx0 = 255 * kD, gx1 = 882 * kD, gy0 = 268 * kD, gy1 = 900 * kD, ry = lerp(gy0, gy1, io(P(t, a + 2.4, a + 4.0)));
+    const m = $("#s4mask"); m.style.left = gx0 + "px"; m.style.width = gx1 - gx0 + "px"; m.style.top = ry + "px"; m.style.height = Math.max(0, gy1 - ry) + "px";
+    const scn = $("#s4scan"); scn.style.top = ry + "px"; scn.style.left = gx0 + "px"; scn.style.width = gx1 - gx0 + "px"; scn.style.opacity = P(t, a + 2.4, a + 2.5) * (1 - P(t, a + 3.9, a + 4.1));
+    $("#s4cam").style.transform = `scale(${1 + 0.05 * io(P(t, a + 2.4, a + 5.5))})`;
+    pop($("#s4chip"), t, a + 3.4);
+    const sow = $("#s4sow"), sc2 = $(".screen", sow);
+    sow.style.opacity = P(t, a + 4.0, a + 4.2);
+    slideIn(sow, t, a + 4.0, 600);
+    const idx = [6, 8, 10, 12, 13, 10], knob = (i) => 33 + ((i + 0.5) / 14) * 324;
+    const tl = [a + 4.5, a + 4.8, a + 5.1, a + 5.4, a + 5.65, a + 5.95];
+    let f = 0; for (let i = 1; i < tl.length; i++) f += P(t, tl[i] - 0.1, tl[i]);
+    layers(sc2, f);
+    let kx = knob(idx[0]); for (let i = 1; i < tl.length; i++) if (t >= tl[i - 1]) kx = lerp(knob(idx[i - 1]), knob(idx[i]), io(P(t, tl[i - 1], tl[i])));
+    cursor(sc2, kx * kP + 4, 285 * kP + 6, P(t, a + 4.3, a + 4.5), P(t, a + 4.45, a + 4.55));
+    pop($("#s4win"), t, a + 5.7);
+  }
+  // ---- S5: sliders re-rank → page 7 plan → share card
+  {
+    const a = SC.s5[0], b = $("#s5b"), cam = $("#s5cam");
+    $(".kicker", $("#s5")).style.opacity = oC(P(t, a + 0.1, a + 0.5));
+    const bx = oQ(P(t, a, a + 0.8));
     b.style.transform = `translateY(${(1 - bx) * 260}px) scale(${0.94 + 0.06 * bx})`;
-    const k = 1240 / 1440;
-    const gx0 = 255 * k, gx1 = 882 * k, gy0 = 268 * k, gy1 = 900 * k;
-    const ry = lerp(gy0, gy1, io(P(t, a + 0.8, a + 2.6)));
-    const m = $("#s3mask");
-    m.style.left = gx0 + "px"; m.style.width = gx1 - gx0 + "px"; m.style.top = ry + "px"; m.style.height = Math.max(0, gy1 - ry) + "px";
-    const sc = $("#s3scan");
-    sc.style.top = ry + "px"; sc.style.left = gx0 + "px"; sc.style.right = 1240 - gx1 + "px";
-    sc.style.opacity = P(t, a + 0.8, a + 0.9) * (1 - P(t, a + 2.5, a + 2.7));
-    // slow camera push
-    const z = 1 + 0.06 * io(P(t, a + 1, a + 3.8));
-    $("#s3cam").style.transform = `scale(${z})`;
-    chip($("#s3c1"), t, a + 1.2); chip($("#s3c2"), t, a + 1.4); chip($("#s3c3"), t, a + 1.6);
-    const sx = oC(P(t, a + 1.9, a + 2.4)); $("#s3sub").style.opacity = sx;
-  }
-  // ---- S4 sowing slider
-  {
-    const s = $("#s4"), a = SC.s4[0], ph = $("#s4phone"), sc = $(".screen", ph);
-    words(s, t, a + 0.2);
-    device(ph, t, a, 1950, 1230, 8);
-    const k = 406 / 390;
-    const idx = [6, 8, 10, 12, 13, 10]; // slider week index in each screenshot
-    const knob = (i) => 33 + ((i + 0.5) / 14) * 324;
-    // drag through the frames
-    const tl = [a + 0.9, a + 1.3, a + 1.7, a + 2.1, a + 2.45, a + 2.8];
-    let f = 0;
-    for (let i = 1; i < tl.length; i++) f += P(t, tl[i] - 0.12, tl[i]);
-    layers(sc, f);
-    let kx = knob(idx[0]);
-    for (let i = 1; i < tl.length; i++) if (t >= tl[i - 1]) kx = lerp(knob(idx[i - 1]), knob(idx[i]), io(P(t, tl[i - 1], tl[i])));
-    const show = P(t, a + 0.5, a + 0.7) * (1 - P(t, a + 3.3, a + 3.5));
-    const ky = 285;
-    const cx = t < a + 0.9 ? lerp(260, knob(idx[0]), io(P(t, a + 0.5, a + 0.9))) : kx;
-    const cy = t < a + 0.9 ? lerp(520, ky, io(P(t, a + 0.5, a + 0.9))) : ky;
-    cursor(sc, cx * k + 4, cy * k + 6, show, P(t, a + 0.85, a + 0.95) * (1 - P(t, a + 2.8, a + 2.9)));
-    chip($("#s4stat"), t, a + 2.85, 40);
-  }
-  // ---- S5 what-if
-  {
-    const s = $("#s5"), a = SC.s5[0], b = $("#s5b"), cam = $("#s5cam");
-    words(s, t, a + 0.15);
-    const bx = oQ(P(t, a, a + 0.9));
-    b.style.transform = `translateY(${(1 - bx) * 260}px) scale(${0.94 + 0.06 * bx})`;
-    const k = 1240 / 1440;
-    // frames 0..4 while dragging
-    const t0 = a + 1.2, t1 = a + 3.0;
-    layers(cam, 4 * io(P(t, t0, t1)));
+    const t0 = a + 0.9, t1 = a + 2.5;
+    layers(cam, 4 * io(P(t, t0, t1)) + P(t, a + 3.4, a + 3.8));
     const rx = lerp(996, 827, io(P(t, t0, t1)));
-    const show = P(t, a + 0.7, a + 0.9) * (1 - P(t, a + 3.6, a + 3.8));
-    const cx = t < t0 ? lerp(1150, 996, io(P(t, a + 0.7, t0))) : rx;
-    const cy = t < t0 ? lerp(620, 315, io(P(t, a + 0.7, t0))) : 315;
-    cursor(cam, cx * k + 4, cy * k + 6, show, P(t, t0 - 0.05, t0 + 0.05) * (1 - P(t, t1, t1 + 0.1)));
-    // camera: full view → field + sliders (while dragging) → plan cards (best plan switches)
+    const cx = t < t0 ? lerp(1150, 996, io(P(t, a + 0.5, t0))) : rx, cy = t < t0 ? lerp(620, 315, io(P(t, a + 0.5, t0))) : 315;
+    cursor(cam, cx * kD + 4, cy * kD + 6, P(t, a + 0.5, a + 0.7) * (1 - P(t, a + 3.0, a + 3.2)), P(t, t0 - 0.05, t0 + 0.05) * (1 - P(t, t1, t1 + 0.1)));
     const R0 = [0, 0, 1240], RA = [138, 60, 964], RB = [138, 173, 964];
-    const u = io(P(t, a + 0.6, a + 1.2)), v = io(P(t, a + 3.0, a + 3.8));
-    const R = [0, 1, 2].map((i) => lerp(lerp(R0[i], RA[i], u), RB[i], v));
+    const u = io(P(t, a + 0.5, a + 1.0)), v = io(P(t, a + 2.5, a + 3.1)), w = io(P(t, a + 3.4, a + 3.9));
+    const R = [0, 1, 2].map((i) => lerp(lerp(lerp(R0[i], RA[i], u), RB[i], v), R0[i], w));
     const zz = 1240 / R[2];
     cam.style.transform = `translate(${-R[0] * zz}px, ${-R[1] * zz}px) scale(${zz})`;
-    chip($("#s5chip"), t, a + 3.7);
+    pop($("#s5chip"), t, a + 2.7);
+    $("#s5chip").style.opacity *= 1 - P(t, a + 3.4, a + 3.6);
+    const c = oQ(P(t, a + 4.2, a + 5.0));
+    $("#s5card").style.opacity = P(t, a + 4.2, a + 4.4);
+    $("#s5card").style.transform = `translateY(${(1 - c) * 500}px) rotate(${(1 - c) * 8 - 3}deg)`;
   }
-  // ---- S6 plan EN → MY flip
+  // ---- S6: share card zooms out over farmland → logo lockup
   {
-    const s = $("#s6"), a = SC.s6[0];
-    words(s, t, a + 0.2, 0.06);
-    device($("#s6flip"), t, a, 1950, 1230, 8);
-    const r = 180 * io(P(t, a + 1.9, a + 2.6));
-    $("#s6en").style.transform = `rotateY(${r}deg)`;
-    $("#s6my").style.transform = `rotateY(${r - 180}deg)`;
-    $("#s6lang").textContent = r < 90 ? "English" : "မြန်မာ  ·  Burmese";
-    $("#s6lang").className = r < 90 ? "" : "mm";
-    chip($("#s6chip"), t, a + 1.0);
-  }
-  // ---- S7 proof
-  {
-    const s = $("#s7"), a = SC.s7[0];
-    words(s, t, a + 0.1);
-    ["#p1", "#p2", "#p3"].forEach((id, i) => { const x = oB(P(t, a + 0.5 + i * 0.18, a + 1.1 + i * 0.18)); $(id).style.opacity = clamp(x); $(id).style.transform = `translateY(${(1 - x) * 60}px)`; });
-    const c = oC(P(t, a + 0.8, a + 2.0));
-    $("#n36").textContent = Math.round(36 * c);
-    $("#n73").textContent = Math.round(73 * oC(P(t, a + 1.0, a + 2.2)));
-    $("#b36").style.width = 36 * 2.4 * c + "%";
-    $("#b28").style.width = 28 * 2.4 * c + "%";
-  }
-  // ---- S8 end card
-  {
-    const a = SC.s8[0];
-    const lg = oB(P(t, a + 0.1, a + 0.8));
-    $("#s8logo").style.transform = `scale(${lg})`;
-    $("#s8ring").style.strokeDashoffset = 160 * (1 - io(P(t, a + 0.3, a + 1.1)));
-    const nx = oQ(P(t, a + 0.4, a + 1.1));
-    $("#s8name").style.opacity = nx; $("#s8name").style.transform = `translateX(${(1 - nx) * 60}px)`;
-    const tx = oQ(P(t, a + 0.7, a + 1.3));
-    $("#s8tag").style.opacity = tx; $("#s8tag").style.transform = `translateX(${(1 - tx) * 60}px)`;
-    const ux = oB(P(t, a + 1.2, a + 1.8));
-    $("#s8url").style.opacity = clamp(ux); $("#s8url").style.transform = `scale(${0.8 + 0.2 * ux})`;
-    $("#s8foot").style.opacity = oC(P(t, a + 1.6, a + 2.2));
+    const a = SC.s6[0];
+    const z = io(P(t, a, a + 1.6));
+    const cw = 470, ch = cw * (3568 / 2160);
+    const sc = lerp((1080 / ch) * 1.9, 0.86, z), x = lerp(960, 560, z), y = lerp(540 + 260, 560, z);
+    $("#s6card").style.transform = `translate(${x - cw / 2}px, ${y - ch / 2}px) scale(${sc}) rotate(${lerp(0, -4, z)}deg)`;
+    $("#farm").style.transform = `scale(${lerp(1.25, 1.0, io(P(t, a, a + 3)))})`;
+    $("#hill1").style.transform = `translateX(${-30 * P(t, a, a + 6)}px)`;
+    $("#hill2").style.transform = `translateX(${-60 * P(t, a, a + 6)}px)`;
+    $("#hill3").style.transform = `translateX(${-100 * P(t, a, a + 6)}px)`;
+    $("#sunc").setAttribute("r", (420 + 40 * Math.sin(t * 1.5)).toFixed(0));
+    const L = $("#s6lock").children;
+    [[0, a + 1.3], [1, a + 1.5], [2, a + 3.9], [3, a + 4.2], [4, a + 4.5]].forEach(([i, at]) => { const q = oQ(P(t, at, at + 0.6)); L[i].style.opacity = q; L[i].style.transform = `translateX(${(1 - q) * 60}px)`; });
   }
 }
 window.seek = seek;
-window.ready = Promise.all([document.fonts.ready, ...$$("img").filter((i) => i.style.display !== "none").map((i) => (i.complete ? 1 : new Promise((r) => (i.onload = i.onerror = r))))]);
-// live preview: play in real time when opened in a browser (?play)
+window.ready = Promise.all([document.fonts.ready, ...$$("img").map((i) => (i.complete ? 1 : new Promise((r) => (i.onload = i.onerror = r))))]);
 if (location.search.includes("play")) { const t0 = performance.now(); const loop = () => { seek(((performance.now() - t0) / 1000) % 30); requestAnimationFrame(loop); }; loop(); } else seek(0);
 </script>
 </body>

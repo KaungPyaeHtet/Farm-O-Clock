@@ -6,7 +6,10 @@ const URL_ = "https://farm-oclock-five.vercel.app";
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function flow(browser, { tag, viewport, scale, lang }) {
-  const page = await browser.newPage({ viewport, deviceScaleFactor: scale });
+  const ctx = await browser.newContext({ viewport, deviceScaleFactor: scale, acceptDownloads: true });
+  // no Web Share in the capture browser → the app downloads the plan card as a PNG instead
+  await ctx.addInitScript(() => { Object.defineProperty(navigator, "canShare", { value: undefined }); });
+  const page = await ctx.newPage();
   const shot = (n) => page.screenshot({ path: `${OUT}${tag}-${n}.png` });
   const next = async () => {
     await page.waitForFunction(() => { const b = document.querySelectorAll("footer button"); return !b[b.length - 1].disabled; }, null, { timeout: 90000 });
@@ -29,8 +32,14 @@ async function flow(browser, { tag, viewport, scale, lang }) {
   await wait(22000);
   await shot("04-conditions");
   await next();
+  await wait(600);
+  await shot("05-crop-a");
   await page.getByRole("button", { name: lang === "my" ? "စပါး" : "Rice" }).first().click();
+  await wait(500);
+  await shot("05-crop-b");
   await page.getByRole("button", { name: lang === "my" ? "ရေချွေတာ" : "Save Water" }).first().click();
+  await wait(500);
+  await shot("05-crop-c");
   await page.getByRole("button", { name: lang === "my" ? "မြေဩဇာ ပြန်တည်" : "Rebuild Nitrogen" }).first().click();
   await wait(600);
   await shot("05-crop");
@@ -68,12 +77,16 @@ async function flow(browser, { tag, viewport, scale, lang }) {
   await next();
   await wait(20000);
   await shot("10-plan");
+  if (tag === "desk") {
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Share my plan" }).click()]);
+    await dl.saveAs(`${OUT}sharecard.png`);
+  }
   if (lang === "en") {
     await page.getByRole("button", { name: "မြန်မာ" }).click();
     await wait(1500);
     await shot("11-plan-my");
   }
-  await page.close();
+  await ctx.close();
 }
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });

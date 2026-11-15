@@ -38,6 +38,8 @@ the decision not to use an LLM in the app, reviewing and testing all AI-assisted
 - **Video:** AI tools (ChatGPT, Claude, Gemini) helped with planning and scripting. The 30-second pitch video was assembled
   with Claude Code as code (`demo/pitch.html`, rendered frame by frame by `demo/render.mjs`) from **real screenshots of the live
   app** (`demo/capture.mjs`); no screen in it is mocked up or AI-generated. Every number shown comes from `reports/README.md`.
+  The background music is an original track synthesised by code (`demo/music.py`), also written with Claude Code; no samples
+  or copyrighted music. The on-screen script was drafted by the team and edited with Claude Code (`demo/SCRIPT.md`).
 - **Text:** AI helped draft and edit text (pitch, submission, docs); the team reviewed every word and all numbers come from our own evaluations.
 - We do not use NASA logos or imply NASA endorsement.
 
