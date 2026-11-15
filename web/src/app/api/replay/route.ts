@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withNasaCache } from "@/lib/supabase";
+import { calibratedChance } from "@/lib/confidence";
 
 // Season Replay engine (Screen 4 centrepiece).
 // Pulls ~20 years of NASA POWER daily data and, for each past year × each
@@ -8,6 +10,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const FILL = -999;
 const HISTORY_YEARS = 20;
+// Candidate sowing weeks come from the long climate record (1985 on), which keeps the
+// recommended week from jumping between years (backend/eval/improvements.py, E4b).
+const CLIM_START_YEAR = 1985;
 const LATENCY_DAYS = 5;
 const GROW_DAYS = 90;
 const WEEKS = 14; // candidate sowing weeks
@@ -29,6 +34,8 @@ type ReplayResponse = {
     heat: number;
     risk: Risk;
     goodCount: number;
+    /** calibrated chance (0-1) that a season sown this week is low risk */
+    chance: number | null;
   }[];
   bestWeekIndex: number;
   source: string;
@@ -71,12 +78,19 @@ function maxSlidingSum(xs: number[], win: number): number {
   }
   return max;
 }
-/** Rank of v within sorted ascending arr → 0..1 (higher = larger). */
+/** Mid-rank percentile of v within sorted ascending arr → 0..1.
+ *  Ties share the middle rank. (Counting "<= v" put ties at the top, so
+ *  e.g. "0 hot days" in a cool climate scored as extreme heat — see
+ *  backend/eval/REPORT.md, E0.) */
 function pct(sorted: number[], v: number): number {
   if (sorted.length <= 1) return 0.5;
-  let lo = 0;
-  for (const x of sorted) if (x <= v) lo++;
-  return lo / sorted.length;
+  let below = 0;
+  let equal = 0;
+  for (const x of sorted) {
+    if (x < v) below++;
+    else if (x === v) equal++;
+  }
+  return (below + equal / 2) / sorted.length;
 }
 
 export async function GET(req: NextRequest) {
@@ -92,16 +106,19 @@ export async function GET(req: NextRequest) {
 
   const end = new Date();
   end.setUTCDate(end.getUTCDate() - LATENCY_DAYS);
-  const fetchStart = new Date(Date.UTC(end.getUTCFullYear() - HISTORY_YEARS, 0, 1));
+  const fetchStart = new Date(Date.UTC(CLIM_START_YEAR, 0, 1));
 
   try {
     const url =
       `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOTCORR,T2M_MAX` +
       `&community=AG&longitude=${lng}&latitude=${lat}` +
       `&start=${ymd(fetchStart)}&end=${ymd(end)}&format=JSON`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`POWER ${res.status}`);
-    const json = await res.json();
+    // Raw POWER response cached per ~0.1° cell for 24 h (no-op without Supabase).
+    const json = await withNasaCache("power-replay-v2", lat, lng, 24, async () => {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`POWER ${res.status}`);
+      return res.json();
+    });
     const rain: Record<string, number> = json?.properties?.parameter?.PRECTOTCORR ?? {};
     const tmax: Record<string, number> = json?.properties?.parameter?.T2M_MAX ?? {};
 
@@ -171,8 +188,9 @@ export async function GET(req: NextRequest) {
           row.push({ driest30: NaN, wettest7: NaN, hotDays: NaN, valid: r.length });
           continue;
         }
-        const driest30 = minSlidingSum(r, 30);
-        const wettest7 = maxSlidingSum(r, 7);
+        // Round to 0.01 mm (POWER precision) so float noise can't break ties (parity with Python).
+        const driest30 = Math.round(minSlidingSum(r, 30) * 100) / 100;
+        const wettest7 = Math.round(maxSlidingSum(r, 7) * 100) / 100;
         const hotDays = h.filter((t) => t >= 35).length;
         row.push({ driest30, wettest7, hotDays, valid: r.length });
         dSamp.push(driest30);
@@ -187,7 +205,7 @@ export async function GET(req: NextRequest) {
     const hSorted = [...hSamp].sort((a, b) => a - b);
 
     // Per-week accumulators for the sowing-calendar aggregate.
-    const wk = weeks.map(() => ({ d: 0, f: 0, h: 0, n: 0, good: 0 }));
+    const wk = weeks.map(() => ({ d: 0, f: 0, h: 0, n: 0, good: 0, seasons: [] as { year: number; good: boolean }[] }));
 
     // Second pass: rate each cell by its worst percentile risk.
     const yearsOut = years.map((y, yi) => {
@@ -195,7 +213,7 @@ export async function GET(req: NextRequest) {
         if (Number.isNaN(m.driest30)) return { risk: "unknown", reason: "No data yet" };
         const pD = 1 - pct(dSorted, m.driest30); // low rain in driest spell = high drought
         const pF = pct(fSorted, m.wettest7); // high burst rain = flood
-        const pH = pct(hSorted, m.hotDays); // more hot days = heat
+        const pH = m.hotDays === 0 ? 0 : pct(hSorted, m.hotDays); // more hot days = heat
         // Blend of the three risks, plus a "one severe risk ruins the season"
         // override so a catastrophic flood/drought still reads red.
         const combined = 0.45 * pD + 0.3 * pF + 0.25 * pH;
@@ -217,6 +235,7 @@ export async function GET(req: NextRequest) {
         wk[ci].h += pH;
         wk[ci].n += 1;
         if (risk === "good") wk[ci].good += 1;
+        wk[ci].seasons.push({ year: y, good: risk === "good" });
         return { risk, reason };
       });
       return { year: y, cells };
@@ -236,6 +255,7 @@ export async function GET(req: NextRequest) {
         heat: r100(h),
         risk,
         goodCount: a.good,
+        chance: calibratedChance(a.seasons),
       };
     });
 

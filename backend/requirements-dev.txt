@@ -1,0 +1,7 @@
+# Everything for tests, backtests, figures and training
+-r requirements.txt
+scikit-learn
+xgboost
+matplotlib
+pytest
+httpx

@@ -3,7 +3,6 @@
 import {
   Wheat,
   Bean,
-  Flower2,
   Sprout,
   Carrot,
   Droplet,
@@ -15,17 +14,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ConstraintId, CropGoals, GoalId } from "@/lib/types";
+import type { ComponentType } from "react";
 import { useLang } from "@/lib/i18n";
+import { RiceIcon, MaizeIcon, CottonIcon, PotatoIcon, SugarcaneIcon } from "@/components/CropIcons";
+import { Screen } from "@/components/Screen";
 
-const CROPS: { id: string; Icon: LucideIcon; en: string; my: string }[] = [
-  { id: "rice", Icon: Wheat, en: "Rice", my: "စပါး" },
+const CROPS: { id: string; Icon: ComponentType<{ className?: string }>; en: string; my: string }[] = [
+  { id: "rice", Icon: RiceIcon, en: "Rice", my: "စပါး" },
   { id: "wheat", Icon: Wheat, en: "Wheat", my: "ဂျုံ" },
-  { id: "maize", Icon: Wheat, en: "Maize", my: "ပြောင်း" },
+  { id: "maize", Icon: MaizeIcon, en: "Maize", my: "ပြောင်း" },
   { id: "soybean", Icon: Bean, en: "Soybean", my: "ပဲပိစပ်" },
-  { id: "cotton", Icon: Flower2, en: "Cotton", my: "ဝါ" },
-  { id: "potato", Icon: Sprout, en: "Potato", my: "အာလူး" },
+  { id: "cotton", Icon: CottonIcon, en: "Cotton", my: "ဝါ" },
+  { id: "potato", Icon: PotatoIcon, en: "Potato", my: "အာလူး" },
   { id: "vegetables", Icon: Carrot, en: "Vegetables", my: "ဟင်းသီးဟင်းရွက်" },
-  { id: "sugarcane", Icon: Sprout, en: "Sugarcane", my: "ကြံ" },
+  { id: "sugarcane", Icon: SugarcaneIcon, en: "Sugarcane", my: "ကြံ" },
 ];
 
 const GOALS: {
@@ -74,19 +76,17 @@ export default function Screen3CropGoals({
   }
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-4">
-      <h2 className="text-lg font-extrabold text-ink">
-        {t("Your crop & goals", "သင့်သီးနှံနှင့် ရည်မှန်းချက်")}
-      </h2>
-      <p className="mt-0.5 text-sm text-muted">
-        {t(
-          "Tell us what you grow and what matters most this season.",
-          "ဤရာသီ သင်ဘာစိုက်သလဲ၊ ဘာအရေးကြီးဆုံးလဲ ပြောပြပါ။"
-        )}
-      </p>
-
+    <Screen
+      title={t("Your crop & goals", "သင့်သီးနှံနှင့် ရည်မှန်းချက်")}
+      subtitle={t(
+        "Tell us what you grow and what matters most this season.",
+        "ဤရာသီ သင်ဘာစိုက်သလဲ၊ ဘာအရေးကြီးဆုံးလဲ ပြောပြပါ။"
+      )}
+    >
+     <div className="lg:grid lg:grid-cols-2 lg:gap-10">
+      <div>
       {/* Current crop */}
-      <h3 className="mt-5 text-sm font-bold text-ink">
+      <h3 className="text-sm font-bold text-ink">
         {t("What are you growing now?", "အခု ဘာစိုက်နေသလဲ?")}
       </h3>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -114,7 +114,7 @@ export default function Screen3CropGoals({
           {t("Your top goals", "အဓိက ရည်မှန်းချက်များ")}
         </h3>
         <span className="text-xs text-muted">
-          {value.goals.length}/2 {t("chosen", "ရွေးပြီး")}
+          {t("Pick 1 or 2", "၁ ခု သို့ ၂ ခု ရွေးပါ")} · {value.goals.length}/2
         </span>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
@@ -143,8 +143,10 @@ export default function Screen3CropGoals({
         })}
       </div>
 
+      </div>
+      <div>
       {/* Constraints */}
-      <h3 className="mt-6 text-sm font-bold text-ink">
+      <h3 className="mt-6 text-sm font-bold text-ink lg:mt-0">
         {t("Any constraints?", "ကန့်သတ်ချက်များ?")}{" "}
         <span className="font-normal text-muted">
           {t("(optional)", "(မဖြစ်မနေ မဟုတ်)")}
@@ -179,8 +181,8 @@ export default function Screen3CropGoals({
           );
         })}
       </div>
-
-      <div className="h-2" />
-    </div>
+      </div>
+     </div>
+    </Screen>
   );
 }

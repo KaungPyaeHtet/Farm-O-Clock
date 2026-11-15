@@ -1,0 +1,9 @@
+engine,strategy,p_low_risk,p_high_risk,mean_stress_rank
+v1,recommended,0.139,0.633,0.382
+v1,start_of_wettest_window,0.128,0.633,0.388
+v1,random_week,0.096,0.67,0.5
+v1,oracle_hindsight,0.267,,
+v1.1,recommended,0.394,0.289,0.356
+v1.1,start_of_wettest_window,0.317,0.361,0.392
+v1.1,random_week,0.281,0.385,0.5
+v1.1,oracle_hindsight,0.633,,

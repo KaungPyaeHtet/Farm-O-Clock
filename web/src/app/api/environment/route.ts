@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 // Screen 2 data source. Pulls real NASA POWER climate data + SRTM elevation
 // for a pinned lat/lng and returns tidy, color-coded cards for the UI.
@@ -6,11 +7,35 @@ import { NextRequest, NextResponse } from "next/server";
 
 type Status = "good" | "watch" | "alert";
 
+// Farmer soil reports → approximate top-soil wetness (0-1), same scale as GWETTOP.
+const REPORT_WETNESS: Record<string, number> = { dry: 0.2, damp: 0.5, wet: 0.75, flooded: 0.95 };
+const PRIOR_REPORTS = 3; // 3 nearby reports ≈ equal weight with the satellite estimate
+
+/** Blend satellite wetness with validated farmer reports within 10 km / 30 days. */
+async function withFarmerReports(lat: number, lng: number, sat: number | null) {
+  const db = supabase();
+  if (!db || sat == null) return { value: sat, reports: 0 };
+  const { data } = await db.rpc("observation_summary", { p_lat: lat, p_lng: lng, p_radius_km: 10, p_days: 30 });
+  const rows = (data ?? []) as { soil_moisture: string | null; reports: number }[];
+  let n = 0;
+  let sum = 0;
+  for (const r of rows) {
+    const w = r.soil_moisture ? REPORT_WETNESS[r.soil_moisture] : undefined;
+    if (w == null) continue;
+    n += Number(r.reports);
+    sum += w * Number(r.reports);
+  }
+  if (!n) return { value: sat, reports: 0 };
+  const k = n / (n + PRIOR_REPORTS);
+  return { value: k * (sum / n) + (1 - k) * sat, reports: n };
+}
+
 type Metric = {
   value: number | null;
   unit: string;
   status: Status;
   label: string; // plain-language verdict
+  farmerReports?: number; // soil moisture only: nearby farmer reports blended in
 };
 
 type EnvResponse = {
@@ -164,11 +189,12 @@ export async function GET(req: NextRequest) {
       fetchSlope(lat, lng),
     ]);
 
+    const soil = await withFarmerReports(lat, lng, avg(power?.GWETTOP));
     const body: EnvResponse = {
       lat,
       lng,
       windowDays: 30,
-      soilMoisture: soilMetric(avg(power?.GWETTOP)),
+      soilMoisture: { ...soilMetric(soil.value), farmerReports: soil.reports },
       rainfall: rainMetric(avg(power?.PRECTOTCORR)),
       heat: heatMetric(avg(power?.T2M_MAX)),
       terrain: terrainMetric(slope),

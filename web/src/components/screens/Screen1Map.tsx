@@ -22,7 +22,7 @@ export default function Screen1Map({
   onPick,
 }: {
   pin: LatLng | null;
-  onPick: (p: LatLng) => void;
+  onPick: (p: LatLng, name?: string) => void;
 }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
@@ -59,10 +59,11 @@ export default function Screen1Map({
 
   function choose(r: GeoResult) {
     skipNext.current = true;
-    setQuery(r.name.split(",").slice(0, 2).join(", "));
+    const short = r.name.split(",").slice(0, 2).join(", ");
+    setQuery(short);
     setResults([]);
     setOpen(false);
-    onPick({ lat: r.lat, lng: r.lng });
+    onPick({ lat: r.lat, lng: r.lng }, r.name.split(",").map((x) => x.trim()).filter((x, i, a) => i < 2 || i === a.length - 1).join(", "));
   }
 
   function clear() {
@@ -73,10 +74,10 @@ export default function Screen1Map({
 
   return (
     <div className="relative h-full w-full">
-      <FarmMap position={pin} onPick={onPick} />
+      <FarmMap position={pin} onPick={(p) => onPick(p)} />
 
       {/* Search bar */}
-      <div className="absolute left-1/2 top-3 z-[1000] w-[min(92%,22rem)] -translate-x-1/2">
+      <div className="absolute left-1/2 top-3 z-[1000] w-[min(92%,22rem)] lg:top-5 lg:w-[30rem] -translate-x-1/2">
         <div className="flex items-center gap-2 rounded-2xl border border-hair bg-surface px-3 py-2.5 shadow-lg">
           <Search className="h-4 w-4 shrink-0 text-muted" />
           <input

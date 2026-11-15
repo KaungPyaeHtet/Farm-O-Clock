@@ -1,0 +1,522 @@
+{
+  "E0": [
+    {
+      "site": "Ayeyarwady delta, MM (rice)",
+      "version": "v1",
+      "good": 0.15357142857142858,
+      "alert": 0.41785714285714287
+    },
+    {
+      "site": "Ayeyarwady delta, MM (rice)",
+      "version": "v1.1",
+      "good": 0.3142857142857143,
+      "alert": 0.2892857142857143
+    },
+    {
+      "site": "Mandalay dry zone, MM",
+      "version": "v1",
+      "good": 0.13214285714285715,
+      "alert": 0.3464285714285714
+    },
+    {
+      "site": "Mandalay dry zone, MM",
+      "version": "v1.1",
+      "good": 0.16071428571428573,
+      "alert": 0.2892857142857143
+    },
+    {
+      "site": "Punjab, IN (wheat/rice)",
+      "version": "v1",
+      "good": 0.16785714285714284,
+      "alert": 0.32142857142857145
+    },
+    {
+      "site": "Punjab, IN (wheat/rice)",
+      "version": "v1.1",
+      "good": 0.20714285714285716,
+      "alert": 0.41785714285714287
+    },
+    {
+      "site": "Iowa, US (maize/soy)",
+      "version": "v1",
+      "good": 0.2,
+      "alert": 0.475
+    },
+    {
+      "site": "Iowa, US (maize/soy)",
+      "version": "v1.1",
+      "good": 0.29285714285714287,
+      "alert": 0.35714285714285715
+    },
+    {
+      "site": "Fallon, Nevada, US (alfalfa)",
+      "version": "v1",
+      "good": 0.0,
+      "alert": 1.0
+    },
+    {
+      "site": "Fallon, Nevada, US (alfalfa)",
+      "version": "v1.1",
+      "good": 0.4357142857142857,
+      "alert": 0.22142857142857142
+    },
+    {
+      "site": "Western Kenya (maize)",
+      "version": "v1",
+      "good": 0.0,
+      "alert": 1.0
+    },
+    {
+      "site": "Western Kenya (maize)",
+      "version": "v1.1",
+      "good": 0.4607142857142857,
+      "alert": 0.21428571428571427
+    },
+    {
+      "site": "Mato Grosso, BR (soy)",
+      "version": "v1",
+      "good": 0.0,
+      "alert": 0.4785714285714286
+    },
+    {
+      "site": "Mato Grosso, BR (soy)",
+      "version": "v1.1",
+      "good": 0.4142857142857143,
+      "alert": 0.3142857142857143
+    },
+    {
+      "site": "Maradi, Niger (millet)",
+      "version": "v1",
+      "good": 0.22857142857142856,
+      "alert": 0.38571428571428573
+    },
+    {
+      "site": "Maradi, Niger (millet)",
+      "version": "v1.1",
+      "good": 0.24642857142857144,
+      "alert": 0.37142857142857144
+    },
+    {
+      "site": "Central Ethiopia (teff)",
+      "version": "v1",
+      "good": 0.0,
+      "alert": 1.0
+    },
+    {
+      "site": "Central Ethiopia (teff)",
+      "version": "v1.1",
+      "good": 0.48928571428571427,
+      "alert": 0.20714285714285716
+    }
+  ],
+  "E1": {
+    "v1": {
+      "n_site_years": 180,
+      "recommended": {
+        "good": 0.1388888888888889,
+        "alert": 0.6333333333333333,
+        "stress_rank": 0.3820512820512821
+      },
+      "random_week": {
+        "good": 0.09642857142857143,
+        "alert": 0.6698412698412698,
+        "stress_rank": 0.5
+      },
+      "start_of_wettest_window": {
+        "good": 0.12777777777777777,
+        "alert": 0.6333333333333333,
+        "stress_rank": 0.38888888888888895
+      },
+      "oracle_any_good_week": {
+        "good": 0.26666666666666666
+      },
+      "per_site": {
+        "Ayeyarwady delta, MM (rice)": {
+          "rec_good": 0.25,
+          "rand_good": 0.218,
+          "rec_alert": 0.45,
+          "rand_alert": 0.407
+        },
+        "Central Ethiopia (teff)": {
+          "rec_good": 0.0,
+          "rand_good": 0.0,
+          "rec_alert": 1.0,
+          "rand_alert": 1.0
+        },
+        "Fallon, Nevada, US (alfalfa)": {
+          "rec_good": 0.0,
+          "rand_good": 0.0,
+          "rec_alert": 1.0,
+          "rand_alert": 1.0
+        },
+        "Iowa, US (maize/soy)": {
+          "rec_good": 0.3,
+          "rand_good": 0.168,
+          "rec_alert": 0.4,
+          "rand_alert": 0.507
+        },
+        "Mandalay dry zone, MM": {
+          "rec_good": 0.05,
+          "rand_good": 0.05,
+          "rec_alert": 0.35,
+          "rand_alert": 0.461
+        },
+        "Maradi, Niger (millet)": {
+          "rec_good": 0.4,
+          "rand_good": 0.211,
+          "rec_alert": 0.3,
+          "rand_alert": 0.429
+        },
+        "Mato Grosso, BR (soy)": {
+          "rec_good": 0.0,
+          "rand_good": 0.0,
+          "rec_alert": 0.85,
+          "rand_alert": 0.886
+        },
+        "Punjab, IN (wheat/rice)": {
+          "rec_good": 0.25,
+          "rand_good": 0.221,
+          "rec_alert": 0.35,
+          "rand_alert": 0.339
+        },
+        "Western Kenya (maize)": {
+          "rec_good": 0.0,
+          "rand_good": 0.0,
+          "rec_alert": 1.0,
+          "rand_alert": 1.0
+        }
+      }
+    },
+    "v1.1": {
+      "n_site_years": 180,
+      "recommended": {
+        "good": 0.39444444444444443,
+        "alert": 0.28888888888888886,
+        "stress_rank": 0.3508547008547009
+      },
+      "random_week": {
+        "good": 0.28134920634920635,
+        "alert": 0.3849206349206349,
+        "stress_rank": 0.5
+      },
+      "start_of_wettest_window": {
+        "good": 0.31666666666666665,
+        "alert": 0.3611111111111111,
+        "stress_rank": 0.3923076923076923
+      },
+      "oracle_any_good_week": {
+        "good": 0.6333333333333333
+      },
+      "per_site": {
+        "Ayeyarwady delta, MM (rice)": {
+          "rec_good": 0.4,
+          "rand_good": 0.254,
+          "rec_alert": 0.4,
+          "rand_alert": 0.404
+        },
+        "Central Ethiopia (teff)": {
+          "rec_good": 0.45,
+          "rand_good": 0.346,
+          "rec_alert": 0.2,
+          "rand_alert": 0.243
+        },
+        "Fallon, Nevada, US (alfalfa)": {
+          "rec_good": 0.45,
+          "rand_good": 0.314,
+          "rec_alert": 0.15,
+          "rand_alert": 0.368
+        },
+        "Iowa, US (maize/soy)": {
+          "rec_good": 0.35,
+          "rand_good": 0.275,
+          "rec_alert": 0.35,
+          "rand_alert": 0.446
+        },
+        "Mandalay dry zone, MM": {
+          "rec_good": 0.1,
+          "rand_good": 0.057,
+          "rec_alert": 0.25,
+          "rand_alert": 0.461
+        },
+        "Maradi, Niger (millet)": {
+          "rec_good": 0.45,
+          "rand_good": 0.211,
+          "rec_alert": 0.3,
+          "rand_alert": 0.475
+        },
+        "Mato Grosso, BR (soy)": {
+          "rec_good": 0.5,
+          "rand_good": 0.479,
+          "rec_alert": 0.35,
+          "rand_alert": 0.364
+        },
+        "Punjab, IN (wheat/rice)": {
+          "rec_good": 0.25,
+          "rand_good": 0.225,
+          "rec_alert": 0.4,
+          "rand_alert": 0.382
+        },
+        "Western Kenya (maize)": {
+          "rec_good": 0.6,
+          "rand_good": 0.371,
+          "rec_alert": 0.2,
+          "rand_alert": 0.321
+        }
+      }
+    }
+  },
+  "E1_calibration": {
+    "v1": {
+      "n": 2520,
+      "brier": 0.08146130952380952,
+      "brier_climo": 0.0831671626984127,
+      "bss": 0.02051113828169282,
+      "reliability": [
+        {
+          "bin": "0.0-0.2",
+          "n": 1917,
+          "mean_pred": 0.04113197704747001,
+          "observed": 0.06781429316640585
+        },
+        {
+          "bin": "0.2-0.4",
+          "n": 529,
+          "mean_pred": 0.24612476370510394,
+          "observed": 0.15879017013232513
+        },
+        {
+          "bin": "0.4-0.6",
+          "n": 73,
+          "mean_pred": 0.4479452054794521,
+          "observed": 0.3972602739726027
+        },
+        {
+          "bin": "0.6-0.8",
+          "n": 1,
+          "mean_pred": 0.6,
+          "observed": 0.0
+        }
+      ]
+    },
+    "v1.1": {
+      "n": 2520,
+      "brier": 0.1942013888888889,
+      "brier_climo": 0.2025747590702948,
+      "bss": 0.04133471622938112,
+      "reliability": [
+        {
+          "bin": "0.0-0.2",
+          "n": 660,
+          "mean_pred": 0.09833333333333334,
+          "observed": 0.1606060606060606
+        },
+        {
+          "bin": "0.2-0.4",
+          "n": 1007,
+          "mean_pred": 0.2721946375372393,
+          "observed": 0.22840119165839126
+        },
+        {
+          "bin": "0.4-0.6",
+          "n": 489,
+          "mean_pred": 0.471881390593047,
+          "observed": 0.4069529652351738
+        },
+        {
+          "bin": "0.6-0.8",
+          "n": 354,
+          "mean_pred": 0.6522598870056499,
+          "observed": 0.4689265536723164
+        },
+        {
+          "bin": "0.8-1.0",
+          "n": 10,
+          "mean_pred": 0.8099999999999999,
+          "observed": 0.8
+        }
+      ]
+    }
+  },
+  "E2": {
+    "n": 2520,
+    "accuracy": 0.5027777777777778,
+    "always_normal": 0.451984126984127,
+    "heidke_skill": 0.20331173800391944,
+    "spearman_prior_vs_next": 0.4312618841895191,
+    "confusion": {
+      "0": {
+        "0": 133,
+        "1": 221,
+        "2": 59
+      },
+      "1": {
+        "0": 255,
+        "1": 619,
+        "2": 265
+      },
+      "2": {
+        "0": 80,
+        "1": 373,
+        "2": 515
+      }
+    }
+  },
+  "E3": {
+    "n_train": 3276,
+    "n_test": 1638,
+    "targets": {
+      "y_alert": {
+        "base_rate_test": 0.5341880341880342,
+        "climatology": {
+          "auc": 0.6576453847594085,
+          "auc_ci": [
+            0.5956446741018048,
+            0.711726079357147
+          ],
+          "brier": 0.2682680567295952,
+          "bss": 0.0
+        },
+        "logistic": {
+          "auc": 0.6894903576109342,
+          "auc_ci": [
+            0.6390641787085554,
+            0.7397761683649362
+          ],
+          "brier": 0.2278572485280076,
+          "bss": 0.1506359299509158
+        },
+        "xgboost": {
+          "auc": 0.6714188354240779,
+          "auc_ci": [
+            0.6174164549736647,
+            0.7186783623048182
+          ],
+          "brier": 0.23818466067314148,
+          "bss": 0.1121393147704377
+        },
+        "xgb_top_features": {
+          "clim": 29.98,
+          "abs_lat": 19.03,
+          "annual_rain": 13.13,
+          "year": 11.05,
+          "root30": 8.73,
+          "root30_z": 8.16
+        }
+      },
+      "y_drought": {
+        "base_rate_test": 0.12332112332112333,
+        "climatology": {
+          "auc": 0.8119225571582228,
+          "auc_ci": [
+            0.7394855150472238,
+            0.8771129562134274
+          ],
+          "brier": 0.09170423593500517,
+          "bss": 0.0
+        },
+        "logistic": {
+          "auc": 0.8170764499848313,
+          "auc_ci": [
+            0.7619751064708731,
+            0.8831174992862525
+          ],
+          "brier": 0.09262431624010974,
+          "bss": -0.010033127649159868
+        },
+        "xgboost": {
+          "auc": 0.8456607325077912,
+          "auc_ci": [
+            0.8066137317476377,
+            0.8881047167450792
+          ],
+          "brier": 0.08421523123979568,
+          "bss": 0.08166476301615189
+        },
+        "xgb_top_features": {
+          "clim": 23.76,
+          "abs_lat": 10.99,
+          "year": 9.62,
+          "root30_z": 9.08,
+          "annual_rain": 8.39,
+          "rain30_z": 8.17
+        }
+      },
+      "y_flood": {
+        "base_rate_test": 0.3553113553113553,
+        "climatology": {
+          "auc": 0.6813170363428095,
+          "auc_ci": [
+            0.6220902536914606,
+            0.7365462547811392
+          ],
+          "brier": 0.26629567014182404,
+          "bss": 0.0
+        },
+        "logistic": {
+          "auc": 0.7767673513485369,
+          "auc_ci": [
+            0.7293143422313975,
+            0.8244365776294806
+          ],
+          "brier": 0.19089245063900742,
+          "bss": 0.28315601024477144
+        },
+        "xgboost": {
+          "auc": 0.7663254646985318,
+          "auc_ci": [
+            0.71603781946923,
+            0.8212846753604836
+          ],
+          "brier": 0.18728671967983246,
+          "bss": 0.2966963391478086
+        },
+        "xgb_top_features": {
+          "rain90_z": 25.37,
+          "clim": 12.39,
+          "top30_z": 11.95,
+          "year": 10.16,
+          "root30_z": 8.89,
+          "annual_rain": 8.69
+        }
+      },
+      "y_heat": {
+        "base_rate_test": 0.04151404151404151,
+        "climatology": {
+          "auc": 0.568433870363432,
+          "auc_ci": [
+            0.3954880171882567,
+            0.7383853639545529
+          ],
+          "brier": 0.04247675401521555,
+          "bss": 0.0
+        },
+        "logistic": {
+          "auc": 0.9036343199700263,
+          "auc_ci": [
+            0.8664392662768706,
+            0.9383693892323586
+          ],
+          "brier": 0.03443088274211911,
+          "bss": 0.18941822320543455
+        },
+        "xgboost": {
+          "auc": 0.7226067815661296,
+          "auc_ci": [
+            0.6043209227156029,
+            0.8465487630788004
+          ],
+          "brier": 0.0411299429833889,
+          "bss": 0.031707013943302
+        },
+        "xgb_top_features": {
+          "clim": 23.61,
+          "abs_lat": 16.58,
+          "root30_z": 12.49,
+          "top30_z": 11.89,
+          "root30": 7.99,
+          "rain30_z": 7.58
+        }
+      }
+    }
+  }
+}

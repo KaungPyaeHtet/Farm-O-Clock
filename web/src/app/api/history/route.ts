@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withNasaCache } from "@/lib/supabase";
 
 // Screen 4 data source. Pulls ~20 years of NASA POWER daily data for a
 // lat/lng, then checks whether THIS season's rainfall & temperature are
@@ -83,9 +84,12 @@ export async function GET(req: NextRequest) {
       `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOTCORR,T2M` +
       `&community=AG&longitude=${lng}&latitude=${lat}` +
       `&start=${ymd(fetchStart)}&end=${ymd(end)}&format=JSON`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`POWER ${res.status}`);
-    const json = await res.json();
+    // Raw POWER response cached per ~0.1° cell for 24 h (no-op without Supabase).
+    const json = await withNasaCache("power-history", lat, lng, 24, async () => {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`POWER ${res.status}`);
+      return res.json();
+    });
     const rainSeries: Record<string, number> =
       json?.properties?.parameter?.PRECTOTCORR ?? {};
     const tempSeries: Record<string, number> =

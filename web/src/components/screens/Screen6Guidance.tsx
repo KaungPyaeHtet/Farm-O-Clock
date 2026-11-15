@@ -1,76 +1,112 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Volume2, Square, ImageDown, Copy, Check, Hand } from "lucide-react";
-import type { CropGoals, HistoryData, LatLng, Verdict } from "@/lib/types";
+import { Volume2, Square, Share2, Check, CalendarCheck, Sprout, CloudSun, Shovel } from "lucide-react";
+import type { CropGoals, EnvData, HistoryData, LatLng, ReplayData, SoilData, Verdict } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
-import { scoreStrategies } from "@/lib/strategies";
+import { cropLabel, scoreStrategies, STRATEGY_TEXT, type FieldInputs } from "@/lib/strategies";
 import { buildBrief } from "@/lib/brief";
 import { shareCard } from "@/lib/shareCard";
-import { card } from "@/lib/ui";
-import Science from "@/components/Science";
+import { card, primaryBtn } from "@/lib/ui";
+import { fetchJson } from "@/lib/fetchJson";
+import { Screen } from "@/components/Screen";
+
+const VERDICT: Record<Verdict, { en: string; my: string; dot: string }> = {
+  dry: { en: "Drier than usual", my: "ပုံမှန်ထက် ခြောက်", dot: "bg-clay" },
+  normal: { en: "About normal", my: "ပုံမှန်", dot: "bg-grass" },
+  wet: { en: "Wetter than usual", my: "ပုံမှန်ထက် စို", dot: "bg-water" },
+};
+
+function Fact({ Icon, label, children }: { Icon: typeof Sprout; label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl bg-paper/70 p-3">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-muted">
+        <Icon className="h-3.5 w-3.5" /> {label}
+      </div>
+      <div className="mt-1 text-base font-extrabold leading-tight text-ink">{children}</div>
+    </div>
+  );
+}
 
 export default function Screen6Guidance({
   pin,
+  place,
   cropGoals,
 }: {
   pin: LatLng | null;
+  place: string;
   cropGoals: CropGoals;
 }) {
   const { lang, t } = useLang();
   const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [sowing, setSowing] = useState<string | null>(null);
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [speaking, setSpeaking] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [fieldDamp, setFieldDamp] = useState<boolean | null>(null);
-  const [sowing, setSowing] = useState<string | null>(null);
+  const [damp, setDamp] = useState<boolean | null>(null);
+  const [satWet, setSatWet] = useState<number | null>(null);
+  const [inputs, setInputs] = useState<FieldInputs>({});
+  const [noVoice, setNoVoice] = useState(false);
 
   const best = useMemo(() => {
-    const scored = scoreStrategies(cropGoals.crop, cropGoals.goals, 50, 50);
+    const scored = scoreStrategies(cropGoals.crop, cropGoals.goals, 50, 50, inputs);
     return scored.find((s) => s.isBest) ?? scored[0];
-  }, [cropGoals.crop, cropGoals.goals]);
+  }, [cropGoals.crop, cropGoals.goals, inputs]);
 
   useEffect(() => {
     if (!pin) return;
     let active = true;
-    fetch(`/api/history?lat=${pin.lat}&lng=${pin.lng}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: HistoryData | null) => active && d && setVerdict(d.verdict))
+    fetchJson<HistoryData>(`/api/history?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((d) => active && setVerdict(d.verdict))
       .catch(() => {});
-    fetch(`/api/replay?lat=${pin.lat}&lng=${pin.lng}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(
-        (d: { weeks?: { label: string }[]; bestWeekIndex?: number } | null) => {
-          if (active && d?.weeks && d.bestWeekIndex != null)
-            setSowing(d.weeks[d.bestWeekIndex].label);
-        }
-      )
+    fetchJson<{ rotations: FieldInputs["water"] }>(`/api/water?lat=${pin.lat}&lng=${pin.lng}&crop=${cropGoals.crop ?? "rice"}`)
+      .then((d) => active && setInputs((i) => ({ ...i, water: d.rotations })))
+      .catch(() => {});
+    fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health })))
+      .catch(() => {});
+    fetchJson<EnvData>(`/api/environment?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((d) => active && d.soilMoisture.value != null && setSatWet(d.soilMoisture.value / 100))
+      .catch(() => {});
+    fetchJson<ReplayData>(`/api/replay?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((d) => active && setSowing(d.weeks[d.bestWeekIndex]?.label ?? null))
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, [pin]);
+  }, [pin, cropGoals.crop]);
 
   const brief = useMemo(
     () => buildBrief(cropGoals.crop, cropGoals.goals, best, verdict, lang),
     [cropGoals.crop, cropGoals.goals, best, verdict, lang]
   );
+  const planName = t(...STRATEGY_TEXT[best.id].name);
 
-  useEffect(() => {
-    return () => {
-      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
-    };
-  }, []);
+  const whyText = brief.why;
+  const checklist = brief.checklist;
+
+  useEffect(() => () => window.speechSynthesis?.cancel(), []);
 
   function toggleSpeak() {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (!window.speechSynthesis) return;
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((v) => v.lang.toLowerCase().startsWith(lang === "my" ? "my" : "en"));
+    if (lang === "my" && voices.length && !voice) {
+      setNoVoice(true); // phone has no Burmese voice — tell the farmer instead of reading silence
+      return;
+    }
     if (speaking) {
       window.speechSynthesis.cancel();
       setSpeaking(false);
       return;
     }
-    const u = new SpeechSynthesisUtterance(brief.readAloud);
+    const text = [
+      brief.headline,
+      sowing ? t(`Sow around ${sowing}.`, `${sowing} ဝန်းကျင် စိုက်ပါ။`) : "",
+      ...brief.body,
+    ].join(" ");
+    const u = new SpeechSynthesisUtterance(text);
     u.lang = lang === "my" ? "my-MM" : "en-US";
+    if (voice) u.voice = voice;
     u.onend = () => setSpeaking(false);
     u.onerror = () => setSpeaking(false);
     window.speechSynthesis.cancel();
@@ -78,211 +114,189 @@ export default function Screen6Guidance({
     setSpeaking(true);
   }
 
-  function copySummary() {
-    const text = [
-      brief.headline,
-      ...brief.body,
-      "",
-      t("Field checklist:", "ကွင်းဆင်း စစ်ဆေးရန်-"),
-      ...brief.checklist.map((c) => `- ${c}`),
-    ].join("\n");
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    });
+  // Farmer ground truth → community observations (no-op without a database).
+  function answerDamp(v: boolean) {
+    setDamp(v);
+    if (!pin) return;
+    fetch("/api/observations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lat: pin.lat,
+        lng: pin.lng,
+        soilMoisture: v ? "damp" : "dry",
+        ...(satWet != null ? { gwettop: satWet } : {}),
+      }),
+    }).catch(() => {});
   }
 
-  function shareImage() {
-    const verdictText: Record<Verdict, string> = {
-      dry: t("Drier than usual", "ပုံမှန်ထက် ခြောက်သွေ့"),
-      normal: t("About normal", "ပုံမှန်"),
-      wet: t("Wetter than usual", "ပုံမှန်ထက် စိုစွတ်"),
-    };
+  function share() {
     shareCard({
       subtitle: t("Your planting plan", "သင့် စိုက်ပျိုးရေး အစီအစဉ်"),
-      location: pin
-        ? `${pin.lat.toFixed(2)}, ${pin.lng.toFixed(2)}`
-        : t("Your field", "သင့်လယ်"),
+      location: place || t("Your field", "သင့်လယ်"),
       lines: [
-        {
-          label: t("Season", "ရာသီ"),
-          value: verdict ? verdictText[verdict] : "—",
-        },
-        {
-          label: t("Best rotation", "အကောင်းဆုံး လှည့်စိုက်"),
-          value: `${best.name}: ${best.rotation.join(" → ")}`,
-        },
-        ...(sowing
-          ? [
-              {
-                label: t("Best sowing window", "အကောင်းဆုံး စိုက်ချိန်"),
-                value: t(`Around ${sowing}`, `${sowing} ဝန်းကျင်`),
-              },
-            ]
-          : []),
+        ...(sowing ? [{ label: t("Sow around", "စိုက်ရန်"), value: sowing }] : []),
+        { label: t("Plan", "အစီအစဉ်"), value: `${planName}: ${best.rotation.map((c) => cropLabel(c, lang)).join(" → ")}` },
+        { label: t("This season", "ဤရာသီ"), value: verdict ? t(VERDICT[verdict].en, VERDICT[verdict].my) : "—" },
       ],
       checklistTitle: t("Check before you plant", "မစိုက်ခင် စစ်ဆေးပါ"),
-      checklist: brief.checklist,
+      checklist: [t("Soil is damp 15 cm down", "မြေ ၁၅ စင်တီမီတာ အောက်တွင် စိုနေသည်"), ...checklist],
       footer: t("Powered by NASA Earth data", "NASA ကမ္ဘာ့ဒေတာဖြင့်"),
       shareTitle: "Farm O’Clock",
     });
   }
 
+  const checkBox = (on: boolean) => (
+    <span
+      className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border ${
+        on ? "border-grass bg-grass text-white" : "border-hair text-transparent"
+      }`}
+    >
+      <Check className="h-3.5 w-3.5" />
+    </span>
+  );
+
   return (
-    <div className="h-full overflow-y-auto px-4 py-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-extrabold text-ink">{brief.headline}</h2>
-        <button
-          onClick={toggleSpeak}
-          className="inline-flex items-center gap-1.5 rounded-full border border-grass/50 px-3 py-1.5 text-sm font-semibold text-grass transition hover:bg-grass/10"
-        >
-          {speaking ? <Square className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          {speaking ? t("Stop", "ရပ်") : t("Read aloud", "ဖတ်ပြ")}
-        </button>
-      </div>
+    <Screen title={brief.headline} subtitle={place ? t(`Near ${place}`, `${place} အနီး`) : undefined}>
+      <div className="lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-8">
+        {/* The plan */}
+        <div>
+          <div className={`${card} p-4 lg:p-5`}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-ink">{t("At a glance", "အကျဉ်းချုပ်")}</h3>
+              <button
+                onClick={toggleSpeak}
+                aria-label={speaking ? t("Stop reading", "ဖတ်ခြင်း ရပ်") : t("Read aloud", "ဖတ်ပြ")}
+                className="inline-flex items-center gap-1.5 rounded-full border border-grass/40 px-3 py-1.5 text-xs font-semibold text-grass transition hover:bg-grass/10"
+              >
+                {speaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                {speaking ? t("Stop", "ရပ်") : t("Listen", "နားထောင်")}
+              </button>
+            </div>
 
-      {/* Brief */}
-      <div className={`mt-3 space-y-2 ${card} p-4`}>
-        {brief.body.map((p, i) => (
-          <p key={i} className="text-sm leading-relaxed text-ink">
-            {p}
-          </p>
-        ))}
-      </div>
-
-      {/* Field check that talks back — the farmer's own knowledge can shift the advice */}
-      <div className={`mt-3 ${card} p-3`}>
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-          <Hand className="h-4 w-4 text-grass" />
-          {t("Does your soil already feel damp?", "သင့်မြေက ယခုပင် စိုနေပြီလား?")}
-        </p>
-        <div className="mt-2 flex gap-2">
-          {[
-            { v: true, en: "Yes, it's damp", my: "ဟုတ်၊ စိုနေသည်" },
-            { v: false, en: "No, it's dry", my: "မဟုတ်၊ ခြောက်နေသည်" },
-          ].map((o) => (
-            <button
-              key={String(o.v)}
-              onClick={() => setFieldDamp(o.v)}
-              className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
-                fieldDamp === o.v
-                  ? "border-grass bg-grass text-white"
-                  : "border-hair bg-surface text-ink"
-              }`}
-            >
-              {t(o.en, o.my)}
-            </button>
-          ))}
-        </div>
-        {fieldDamp === true && verdict === "dry" && (
-          <p className="mt-2 rounded-xl bg-grass/10 p-2.5 text-xs leading-relaxed text-grass-strong">
-            {t(
-              "The satellites read this season as dry, but you can see your field. Trust the ground — we've eased the drought caution for you.",
-              "ဂြိုဟ်တုက ဤရာသီကို ခြောက်သွေ့သည်ဟု ဖတ်သော်လည်း သင့်လယ်ကို သင်မြင်နေသည်။ မြေကို ယုံပါ — မိုးခေါင်သတိပေးချက်ကို လျှော့ပေးထားပါသည်။"
-            )}
-          </p>
-        )}
-        {fieldDamp === false && verdict === "wet" && (
-          <p className="mt-2 rounded-xl bg-sun/10 p-2.5 text-xs leading-relaxed text-[#9a6a0c]">
-            {t(
-              "The satellites read this season as wet, but your ground is dry. Check for drainage or dry pockets before you sow.",
-              "ဂြိုဟ်တုက ဤရာသီကို စိုသည်ဟု ဖတ်သော်လည်း သင့်မြေ ခြောက်နေသည်။ မစိုက်ခင် ရေထုတ်မြောင်း သို့ ခြောက်သည့်နေရာ စစ်ပါ။"
-            )}
-          </p>
-        )}
-      </div>
-
-      {/* Terms */}
-      {brief.terms.length > 0 && (
-        <div className="mt-3">
-          <h3 className="text-sm font-bold text-ink">
-            {t("Terms explained", "ဝေါဟာရ ရှင်းလင်းချက်")}
-          </h3>
-          <div className="mt-2 space-y-2">
-            {brief.terms.map((term) => (
-              <div key={term.term} className="rounded-2xl border border-hair bg-surface p-3 text-sm">
-                <span className="font-bold text-ink">{term.term}:</span>{" "}
-                <span className="text-muted">{term.def}</span>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Fact Icon={CalendarCheck} label={t("Sow around", "စိုက်ရန်")}>
+                {sowing ?? "…"}
+              </Fact>
+              <Fact Icon={CloudSun} label={t("This season", "ဤရာသီ")}>
+                {verdict ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className={`h-2.5 w-2.5 rounded-full ${VERDICT[verdict].dot}`} />
+                    {t(VERDICT[verdict].en, VERDICT[verdict].my)}
+                  </span>
+                ) : (
+                  "…"
+                )}
+              </Fact>
+              <div className="col-span-2 sm:col-span-1">
+                <Fact Icon={Sprout} label={t("Plan", "အစီအစဉ်")}>
+                  {planName}
+                </Fact>
               </div>
-            ))}
+            </div>
+
+            <ol className="mt-3 grid grid-cols-3 gap-1.5">
+              {best.rotation.map((crop, i) => {
+                const changed = i === 1 && best.id !== "baseline";
+                return (
+                  <li
+                    key={i}
+                    className={`rounded-xl px-2 py-1.5 text-center ${changed ? "bg-grass text-white" : "bg-grass/10 text-ink"}`}
+                  >
+                    <span className={`block text-[10px] font-semibold ${changed ? "text-white/80" : "text-muted"}`}>
+                      {t(`Year ${i + 1}`, `နှစ် ${i + 1}`)}
+                    </span>
+                    <span className="text-sm font-bold leading-tight">{cropLabel(crop, lang)}</span>
+                  </li>
+                );
+              })}
+            </ol>
+
+            <p className="mt-3 text-sm leading-relaxed text-muted">{whyText}</p>
+            {noVoice && (
+              <p className="mt-2 rounded-lg bg-sun/15 p-2 text-xs text-[#9a6a0c]">
+                {t(
+                  "This phone has no Burmese voice. Add “Myanmar (Burmese)” in the phone's text-to-speech settings, or switch to English.",
+                  "ဤဖုန်းတွင် မြန်မာအသံ မရှိပါ။ ဖုန်း၏ စာဖတ်အသံ ဆက်တင်တွင် မြန်မာဘာသာ ထည့်ပါ၊ သို့မဟုတ် English သို့ ပြောင်းပါ။"
+                )}
+              </p>
+            )}
+          </div>
+
+          <button onClick={share} className={`mt-3 flex w-full items-center justify-center gap-2 py-3.5 text-sm ${primaryBtn}`}>
+            <Share2 className="h-4 w-4" /> {t("Share my plan", "အစီအစဉ် မျှဝေမည်")}
+          </button>
+        </div>
+
+        {/* Field check */}
+        <div className="mt-6 lg:mt-0">
+          <h3 className="text-sm font-bold text-ink">{t("Before you plant", "မစိုက်ခင်")}</h3>
+          <div className="mt-2 space-y-2">
+            <div className={`${card} p-3`}>
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+                <Shovel className="h-4 w-4 text-grass" />
+                {t("Dig 15 cm. Is the soil damp?", "၁၅ စင်တီမီတာ တူးပါ။ မြေ စိုနေသလား?")}
+              </p>
+              <div className="mt-2 flex gap-2">
+                {[
+                  { v: true, en: "Yes, damp", my: "စိုသည်" },
+                  { v: false, en: "No, dry", my: "ခြောက်သည်" },
+                ].map((o) => (
+                  <button
+                    key={String(o.v)}
+                    onClick={() => answerDamp(o.v)}
+                    aria-pressed={damp === o.v}
+                    className={`flex-1 rounded-xl border py-2 text-sm font-semibold transition ${
+                      damp === o.v ? "border-grass bg-grass text-white" : "border-hair bg-surface text-ink"
+                    }`}
+                  >
+                    {t(o.en, o.my)}
+                  </button>
+                ))}
+              </div>
+              {damp === false && (
+                <p className="mt-2 text-xs text-[#9a6a0c]">
+                  {t("Wait for rain or water before sowing.", "မစိုက်ခင် မိုး သို့ ရေ စောင့်ပါ။")}
+                </p>
+              )}
+              {damp === true && verdict === "wet" && (
+                <p className="mt-2 text-xs text-[#9a6a0c]">
+                  {t("Check drainage — the season is wetter than usual.", "ရေထုတ်မြောင်း စစ်ပါ — ရာသီ ပုံမှန်ထက် စိုသည်။")}
+                </p>
+              )}
+              {damp != null && (
+                <p className="mt-1 text-[11px] text-muted">
+                  {t("Thanks — your answer helps farms nearby.", "ကျေးဇူးပါ — သင့်အဖြေ အနီးရှိလယ်များကို ကူညီသည်။")}
+                </p>
+              )}
+            </div>
+
+            {checklist.map((item, i) => {
+              const on = !!checked[i];
+              return (
+                <button
+                  key={i}
+                  onClick={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
+                  aria-pressed={on}
+                  className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left text-sm transition ${
+                    on ? "border-grass/50 bg-grass/10 text-muted line-through" : "border-hair bg-surface text-ink"
+                  }`}
+                >
+                  {checkBox(on)}
+                  <span>{item}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
-      )}
-
-      {/* Checklist */}
-      <h3 className="mt-5 flex items-center gap-1.5 text-sm font-bold text-ink">
-        <Check className="h-4 w-4 text-grass" />
-        {t("Check these before you plant", "မစိုက်ခင် ဤအချက်များ စစ်ဆေးပါ")}
-      </h3>
-      <div className="mt-2 space-y-2">
-        {brief.checklist.map((item, i) => {
-          const on = !!checked[i];
-          return (
-            <button
-              key={i}
-              onClick={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
-              className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left text-sm transition ${
-                on
-                  ? "border-grass/50 bg-grass/10 text-muted line-through"
-                  : "border-hair bg-surface text-ink"
-              }`}
-            >
-              <span
-                className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border ${
-                  on ? "border-grass bg-grass text-white" : "border-hair text-transparent"
-                }`}
-              >
-                <Check className="h-3.5 w-3.5" />
-              </span>
-              <span>{item}</span>
-            </button>
-          );
-        })}
       </div>
 
-      {/* Share */}
-      <div className="mt-5 flex gap-2">
-        <button
-          onClick={shareImage}
-          className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-grass py-3.5 text-sm font-bold text-white transition hover:bg-grass-strong"
-        >
-          <ImageDown className="h-4 w-4" />
-          {t("Share picture card", "ပုံ မျှဝေမည်")}
-        </button>
-        <button
-          onClick={copySummary}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-hair bg-surface py-3.5 text-sm font-bold text-ink transition hover:bg-black/[0.03]"
-        >
-          {copied ? (
-            <Check className="h-4 w-4 text-grass" />
-          ) : (
-            <Copy className="h-4 w-4" />
-          )}
-          {copied ? t("Copied", "ကူးပြီး") : t("Copy text", "စာ ကူးမည်")}
-        </button>
-      </div>
-      <p className="mt-2 text-center text-[11px] text-muted">
+      <p className="mt-6 text-center text-xs text-muted">
         {t(
-          "Share the picture on Viber or Messenger — no reading needed.",
-          "Viber သို့ Messenger တွင် ပုံကို မျှဝေပါ — စာဖတ်စရာ မလိုပါ။"
+          "This plan supports your own judgment. Check your field and ask local experts before planting.",
+          "ဤအစီအစဉ်သည် သင့်ဆုံးဖြတ်ချက်ကို ကူညီရန်သာ။ မစိုက်ခင် လယ်ကို စစ်ပြီး ဒေသကျွမ်းကျင်သူများကို မေးပါ။"
         )}
       </p>
-
-      <Science>
-        <p>
-          {t(
-            "Recommendation = our transparent scoring model (soil / water / resilience, weighted by your goals). A placeholder for the XGBoost model.",
-            "အကြံပြုချက် = ပွင့်လင်းသော အမှတ်ပေးစနစ် (မြေ / ရေ / ခံနိုင်ရည်၊ သင့်ရည်မှန်းချက်ဖြင့် အလေးချိန်)။ XGBoost အစားထိုး။"
-          )}
-        </p>
-        <p>
-          {t(
-            "Season verdict = rainfall vs the 20-year NASA POWER baseline for this exact point.",
-            "ရာသီဆုံးဖြတ်ချက် = ဤနေရာအတွက် ၂၀ နှစ် NASA POWER အခြေခံနှင့် မိုးရေ နှိုင်းယှဉ်ချက်။"
-          )}
-        </p>
-      </Science>
-      <div className="h-2" />
-    </div>
+    </Screen>
   );
 }

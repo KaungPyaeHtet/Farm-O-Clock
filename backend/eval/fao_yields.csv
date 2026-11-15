@@ -1,0 +1,201 @@
+country,item,year,yield,unit
+Brazil,Soya beans,2000,2403.3,kg/ha
+Brazil,Soya beans,2001,2710.5,kg/ha
+Brazil,Soya beans,2002,2573.9,kg/ha
+Brazil,Soya beans,2003,2802.7,kg/ha
+Brazil,Soya beans,2004,2300.5,kg/ha
+Brazil,Soya beans,2005,2230.3,kg/ha
+Brazil,Soya beans,2006,2379.6,kg/ha
+Brazil,Soya beans,2007,2813.3,kg/ha
+Brazil,Soya beans,2008,2816.2,kg/ha
+Brazil,Soya beans,2009,2636.5,kg/ha
+Brazil,Soya beans,2010,2947.5,kg/ha
+Brazil,Soya beans,2011,3121.4,kg/ha
+Brazil,Soya beans,2012,2636.6,kg/ha
+Brazil,Soya beans,2013,2928.5,kg/ha
+Brazil,Soya beans,2014,2865.9,kg/ha
+Brazil,Soya beans,2015,3028.6,kg/ha
+Brazil,Soya beans,2016,2904.9,kg/ha
+Brazil,Soya beans,2017,3378.5,kg/ha
+Brazil,Soya beans,2018,3390.4,kg/ha
+Brazil,Soya beans,2019,3184.7,kg/ha
+Brazil,Soya beans,2020,3275.5,kg/ha
+Brazil,Soya beans,2021,3445.2,kg/ha
+Brazil,Soya beans,2022,2954.6,kg/ha
+Brazil,Soya beans,2023,3425.3,kg/ha
+Brazil,Soya beans,2024,3147.1,kg/ha
+Ethiopia,Maize (corn),2000,1620.4,kg/ha
+Ethiopia,Maize (corn),2001,1742.7,kg/ha
+Ethiopia,Maize (corn),2002,1875.3,kg/ha
+Ethiopia,Maize (corn),2003,1531.9,kg/ha
+Ethiopia,Maize (corn),2004,1613.2,kg/ha
+Ethiopia,Maize (corn),2005,2006.0,kg/ha
+Ethiopia,Maize (corn),2006,2640.4,kg/ha
+Ethiopia,Maize (corn),2007,1823.2,kg/ha
+Ethiopia,Maize (corn),2008,1883.4,kg/ha
+Ethiopia,Maize (corn),2009,1984.9,kg/ha
+Ethiopia,Maize (corn),2010,2192.6,kg/ha
+Ethiopia,Maize (corn),2011,2221.3,kg/ha
+Ethiopia,Maize (corn),2012,2593.3,kg/ha
+Ethiopia,Maize (corn),2013,2740.3,kg/ha
+Ethiopia,Maize (corn),2014,2950.2,kg/ha
+Ethiopia,Maize (corn),2015,2776.5,kg/ha
+Ethiopia,Maize (corn),2016,2946.8,kg/ha
+Ethiopia,Maize (corn),2017,3311.9,kg/ha
+Ethiopia,Maize (corn),2018,3336.8,kg/ha
+Ethiopia,Maize (corn),2019,3655.2,kg/ha
+Ethiopia,Maize (corn),2020,3711.2,kg/ha
+Ethiopia,Maize (corn),2021,3433.0,kg/ha
+Ethiopia,Maize (corn),2022,3488.5,kg/ha
+Ethiopia,Maize (corn),2023,3409.2,kg/ha
+Ethiopia,Maize (corn),2024,3443.6,kg/ha
+India,Rice,2000,2838.0,kg/ha
+India,Rice,2001,3116.4,kg/ha
+India,Rice,2002,2690.1,kg/ha
+India,Rice,2003,3092.6,kg/ha
+India,Rice,2004,2952.7,kg/ha
+India,Rice,2005,3119.6,kg/ha
+India,Rice,2006,3199.5,kg/ha
+India,Rice,2007,3292.5,kg/ha
+India,Rice,2008,3279.7,kg/ha
+India,Rice,2009,3194.1,kg/ha
+India,Rice,2010,3323.0,kg/ha
+India,Rice,2011,3606.0,kg/ha
+India,Rice,2012,3677.4,kg/ha
+India,Rice,2013,3616.5,kg/ha
+India,Rice,2014,3590.0,kg/ha
+India,Rice,2015,3601.8,kg/ha
+India,Rice,2016,3752.6,kg/ha
+India,Rice,2017,3811.7,kg/ha
+India,Rice,2018,3976.1,kg/ha
+India,Rice,2019,4052.1,kg/ha
+India,Rice,2020,4059.4,kg/ha
+India,Rice,2021,4203.3,kg/ha
+India,Rice,2022,4238.8,kg/ha
+India,Rice,2023,4313.5,kg/ha
+India,Rice,2024,4313.2,kg/ha
+India,Wheat,2000,2778.5,kg/ha
+India,Wheat,2001,2708.1,kg/ha
+India,Wheat,2002,2762.1,kg/ha
+India,Wheat,2003,2610.0,kg/ha
+India,Wheat,2004,2713.2,kg/ha
+India,Wheat,2005,2601.6,kg/ha
+India,Wheat,2006,2618.8,kg/ha
+India,Wheat,2007,2707.9,kg/ha
+India,Wheat,2008,2802.2,kg/ha
+India,Wheat,2009,2907.1,kg/ha
+India,Wheat,2010,2839.5,kg/ha
+India,Wheat,2011,2988.6,kg/ha
+India,Wheat,2012,3177.5,kg/ha
+India,Wheat,2013,3153.8,kg/ha
+India,Wheat,2014,3145.7,kg/ha
+India,Wheat,2015,2749.6,kg/ha
+India,Wheat,2016,3033.9,kg/ha
+India,Wheat,2017,3199.9,kg/ha
+India,Wheat,2018,3368.2,kg/ha
+India,Wheat,2019,3533.4,kg/ha
+India,Wheat,2020,3439.8,kg/ha
+India,Wheat,2021,3520.8,kg/ha
+India,Wheat,2022,3537.3,kg/ha
+India,Wheat,2023,3520.7,kg/ha
+India,Wheat,2024,3559.0,kg/ha
+Kenya,Maize (corn),2000,1440.0,kg/ha
+Kenya,Maize (corn),2001,1701.2,kg/ha
+Kenya,Maize (corn),2002,1512.6,kg/ha
+Kenya,Maize (corn),2003,1622.4,kg/ha
+Kenya,Maize (corn),2004,1929.3,kg/ha
+Kenya,Maize (corn),2005,1640.5,kg/ha
+Kenya,Maize (corn),2006,1719.7,kg/ha
+Kenya,Maize (corn),2007,1813.2,kg/ha
+Kenya,Maize (corn),2008,1392.5,kg/ha
+Kenya,Maize (corn),2009,1294.3,kg/ha
+Kenya,Maize (corn),2010,1725.1,kg/ha
+Kenya,Maize (corn),2011,1584.0,kg/ha
+Kenya,Maize (corn),2012,1736.6,kg/ha
+Kenya,Maize (corn),2013,1692.2,kg/ha
+Kenya,Maize (corn),2014,1660.2,kg/ha
+Kenya,Maize (corn),2015,1823.0,kg/ha
+Kenya,Maize (corn),2016,1428.4,kg/ha
+Kenya,Maize (corn),2017,1527.2,kg/ha
+Kenya,Maize (corn),2018,1765.6,kg/ha
+Kenya,Maize (corn),2019,1560.0,kg/ha
+Kenya,Maize (corn),2020,1774.1,kg/ha
+Kenya,Maize (corn),2021,1523.8,kg/ha
+Kenya,Maize (corn),2022,1458.3,kg/ha
+Kenya,Maize (corn),2023,1763.4,kg/ha
+Kenya,Maize (corn),2024,1666.2,kg/ha
+Myanmar,Rice,2000,3383.2,kg/ha
+Myanmar,Rice,2001,3417.9,kg/ha
+Myanmar,Rice,2002,3419.4,kg/ha
+Myanmar,Rice,2003,3544.0,kg/ha
+Myanmar,Rice,2004,3635.6,kg/ha
+Myanmar,Rice,2005,3749.6,kg/ha
+Myanmar,Rice,2006,3830.0,kg/ha
+Myanmar,Rice,2007,3926.0,kg/ha
+Myanmar,Rice,2008,4032.3,kg/ha
+Myanmar,Rice,2009,4055.8,kg/ha
+Myanmar,Rice,2010,4066.4,kg/ha
+Myanmar,Rice,2011,3833.8,kg/ha
+Myanmar,Rice,2012,3811.5,kg/ha
+Myanmar,Rice,2013,3853.8,kg/ha
+Myanmar,Rice,2014,3908.4,kg/ha
+Myanmar,Rice,2015,3933.9,kg/ha
+Myanmar,Rice,2016,3879.4,kg/ha
+Myanmar,Rice,2017,3859.7,kg/ha
+Myanmar,Rice,2018,3918.7,kg/ha
+Myanmar,Rice,2019,3856.6,kg/ha
+Myanmar,Rice,2020,3865.2,kg/ha
+Myanmar,Rice,2021,3895.7,kg/ha
+Myanmar,Rice,2022,3946.7,kg/ha
+Myanmar,Rice,2023,3981.8,kg/ha
+Myanmar,Rice,2024,3940.9,kg/ha
+Niger,Millet,2000,325.9,kg/ha
+Niger,Millet,2001,450.8,kg/ha
+Niger,Millet,2002,460.4,kg/ha
+Niger,Millet,2003,475.6,kg/ha
+Niger,Millet,2004,363.6,kg/ha
+Niger,Millet,2005,450.0,kg/ha
+Niger,Millet,2006,482.9,kg/ha
+Niger,Millet,2007,450.9,kg/ha
+Niger,Millet,2008,517.8,kg/ha
+Niger,Millet,2009,411.1,kg/ha
+Niger,Millet,2010,529.1,kg/ha
+Niger,Millet,2011,391.5,kg/ha
+Niger,Millet,2012,544.3,kg/ha
+Niger,Millet,2013,412.5,kg/ha
+Niger,Millet,2014,451.4,kg/ha
+Niger,Millet,2015,529.8,kg/ha
+Niger,Millet,2016,537.5,kg/ha
+Niger,Millet,2017,541.5,kg/ha
+Niger,Millet,2018,548.3,kg/ha
+Niger,Millet,2019,478.8,kg/ha
+Niger,Millet,2020,520.3,kg/ha
+Niger,Millet,2021,349.3,kg/ha
+Niger,Millet,2022,539.3,kg/ha
+Niger,Millet,2023,469.4,kg/ha
+Niger,Millet,2024,563.7,kg/ha
+United States of America,Maize (corn),2000,8591.1,kg/ha
+United States of America,Maize (corn),2001,8673.3,kg/ha
+United States of America,Maize (corn),2002,8118.0,kg/ha
+United States of America,Maize (corn),2003,8924.6,kg/ha
+United States of America,Maize (corn),2004,10063.7,kg/ha
+United States of America,Maize (corn),2005,9285.2,kg/ha
+United States of America,Maize (corn),2006,9357.7,kg/ha
+United States of America,Maize (corn),2007,9458.5,kg/ha
+United States of America,Maize (corn),2008,9620.9,kg/ha
+United States of America,Maize (corn),2009,10318.1,kg/ha
+United States of America,Maize (corn),2010,9575.7,kg/ha
+United States of America,Maize (corn),2011,9214.6,kg/ha
+United States of America,Maize (corn),2012,7727.0,kg/ha
+United States of America,Maize (corn),2013,9925.6,kg/ha
+United States of America,Maize (corn),2014,10732.6,kg/ha
+United States of America,Maize (corn),2015,10572.3,kg/ha
+United States of America,Maize (corn),2016,11743.3,kg/ha
+United States of America,Maize (corn),2017,11083.7,kg/ha
+United States of America,Maize (corn),2018,11074.6,kg/ha
+United States of America,Maize (corn),2019,10510.4,kg/ha
+United States of America,Maize (corn),2020,10760.5,kg/ha
+United States of America,Maize (corn),2021,11091.2,kg/ha
+United States of America,Maize (corn),2022,10886.3,kg/ha
+United States of America,Maize (corn),2023,11130.6,kg/ha
+United States of America,Maize (corn),2024,11256.8,kg/ha

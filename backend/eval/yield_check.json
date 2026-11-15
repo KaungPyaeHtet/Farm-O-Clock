@@ -1,0 +1,65 @@
+{
+  "n_site_years": 133,
+  "pooled_spearman_stress_vs_yield": -0.298,
+  "yield_anom_pct_in_top20pct_stress_years": -2.36,
+  "yield_anom_pct_in_other_years": 0.62,
+  "yield_anom_by_recommended_week_outcome": {
+    "alert": {
+      "mean": -0.18,
+      "count": 39
+    },
+    "good": {
+      "mean": -0.85,
+      "count": 56
+    },
+    "watch": {
+      "mean": 1.4,
+      "count": 38
+    }
+  },
+  "per_site": {
+    "Ayeyarwady delta, MM (rice)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.247,
+      "worst_stress_year": 2007,
+      "yield_anom_that_year_pct": 5.1
+    },
+    "Central Ethiopia (teff)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.012,
+      "worst_stress_year": 2018,
+      "yield_anom_that_year_pct": 5.6
+    },
+    "Iowa, US (maize/soy)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.47,
+      "worst_stress_year": 2012,
+      "yield_anom_that_year_pct": -22.6
+    },
+    "Maradi, Niger (millet)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.456,
+      "worst_stress_year": 2016,
+      "yield_anom_that_year_pct": 10.1
+    },
+    "Mato Grosso, BR (soy)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.057,
+      "worst_stress_year": 2016,
+      "yield_anom_that_year_pct": -4.7
+    },
+    "Punjab, IN (wheat/rice)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.337,
+      "worst_stress_year": 2014,
+      "yield_anom_that_year_pct": -2.5
+    },
+    "Western Kenya (maize)": {
+      "n": 19,
+      "spearman_stress_vs_yield": -0.504,
+      "worst_stress_year": 2013,
+      "yield_anom_that_year_pct": 3.8
+    }
+  },
+  "source": "FAOSTAT Production_Crops_Livestock (Dec 2025 bulk), national yields, linear-detrended"
+}

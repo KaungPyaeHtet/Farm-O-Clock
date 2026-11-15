@@ -9,6 +9,8 @@ export type Metric = {
   unit: string;
   status: Status;
   label: string;
+  /** soil moisture only: number of nearby farmer reports blended in */
+  farmerReports?: number;
 };
 
 export type GoalId = "water" | "nitrogen" | "erosion" | "income";
@@ -47,6 +49,8 @@ export type ReplayData = {
     heat: number;
     risk: ReplayRisk;
     goodCount: number;
+    /** calibrated chance (0-1) that a season sown this week is low risk */
+    chance: number | null;
   }[];
   bestWeekIndex: number;
   source: string;
@@ -62,4 +66,73 @@ export type HistoryData = {
   temperature: { thisYear: number; normal: number; anomaly: number };
   series: { year: number; rain: number; temp: number; isCurrent: boolean }[];
   source: string;
+};
+
+/** Python model API — /api/outlook (risk-logreg-v1). Probabilities 0-1. */
+export type OutlookWeek = {
+  label: string;
+  start_doy: number;
+  /** days from the latest NASA data to this sowing date; outlook only meaningful when in_range */
+  lead_days: number;
+  in_range: boolean;
+  /** seasonal-forecast shift for this sowing window, if the forecast covers it */
+  forecast: { rain_pct: number; heat_c: number; low_risk: number; usual_low_risk: number; seasons: number } | null;
+  high_risk: number;
+  high_risk_usual: number | null;
+  drought: number;
+  drought_usual: number | null;
+  flood: number;
+  flood_usual: number | null;
+  heat: number;
+  heat_usual: number | null;
+};
+
+export type OutlookData = {
+  data_through: string;
+  conditions: Record<string, number | null>;
+  weeks: OutlookWeek[];
+  seasonal_forecast: { available: boolean; source: string };
+  model: { version: string; trained: string; held_out_auc: Record<string, number> };
+  note: string;
+};
+
+/** Python model API — /api/scenario. Counts are past seasons out of `seasons`. */
+export type ScenarioData = {
+  rain_pct: number;
+  heat_c: number;
+  years: [number, number];
+  weeks: {
+    label: string;
+    start_doy: number;
+    seasons: number;
+    low_risk: number;
+    some_risk: number;
+    high_risk: number;
+  }[];
+  best_week_index: number;
+};
+
+/** /api/soil — ISRIC SoilGrids, top 30 cm. */
+export type SoilData = {
+  texture: string; // USDA class, e.g. "Clay loam"
+  clay: number; // %
+  sand: number; // %
+  silt: number; // %
+  soc: number; // organic carbon, g/kg
+  ph: number;
+  organic: "low" | "medium" | "good";
+  phLevel: "acidic" | "good" | "alkaline";
+  health: number; // 0-100 soil-health score
+};
+
+/** /api/vegetation — MODIS NDVI greenness at the pin. */
+export type VegetationData = {
+  cover: "green" | "sparse" | "bare" | "water";
+  views: number;
+  latest?: { date: string; ndvi: number };
+  usual_for_date?: number | null;
+  difference?: number | null;
+  stressed?: boolean;
+  bare_months?: string[];
+  monthly_ndvi?: Record<string, number | null>;
 };

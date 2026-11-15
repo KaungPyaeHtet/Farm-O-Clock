@@ -1,0 +1,6 @@
+# Runtime (API server: Vercel / Cloud Run / Docker)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+numpy>=2.0
+pandas>=2.2
+requests>=2.32

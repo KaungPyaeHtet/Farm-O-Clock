@@ -1,222 +1,161 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Droplet,
-  ShieldCheck,
-  CloudRain,
-  Thermometer,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Wheat,
-  Bean,
-  Flower2,
-  Sprout,
-  Carrot,
-  Leaf,
-  ArrowRight,
-  type LucideIcon,
-} from "lucide-react";
-import type { CropGoals } from "@/lib/types";
+import { CloudRain, Thermometer, Star, Sprout, Droplet, ShieldCheck, type LucideIcon } from "lucide-react";
+import type { CropGoals, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
-import { scoreStrategies, type ScoredStrategy } from "@/lib/strategies";
+import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type ScoredStrategy } from "@/lib/strategies";
+import { fetchJson } from "@/lib/fetchJson";
+import type { SoilData } from "@/lib/types";
 import { card } from "@/lib/ui";
 import ReactiveField from "@/components/ReactiveField";
+import ScenarioNote from "@/components/ScenarioNote";
+import { Screen } from "@/components/Screen";
 
-function cropIcon(name: string): LucideIcon {
-  const n = name.toLowerCase();
-  if (n.includes("cover") || n.includes("clover") || n.includes("hemp")) return Leaf;
-  if (/(bean|pea|lentil|chickpea|cowpea|gram|soy)/.test(n)) return Bean;
-  if (n.includes("cotton")) return Flower2;
-  if (n.includes("potato")) return Sprout;
-  if (n.includes("veg") || n.includes("carrot")) return Carrot;
-  if (/(rice|wheat|maize|sorghum|millet|cane|corn)/.test(n)) return Wheat;
-  return Sprout;
-}
+const RATING = {
+  good: { dot: "bg-grass", en: "Good", my: "ကောင်း" },
+  ok: { dot: "bg-sun", en: "OK", my: "သင့်" },
+  poor: { dot: "bg-clay", en: "Poor", my: "ညံ့" },
+} as const;
+const rate = (v: number) => (v >= 60 ? "good" : v >= 40 ? "ok" : "poor");
 
-function RotationTimeline({ rotation }: { rotation: string[] }) {
+function Rating({ Icon, label, value }: { Icon: LucideIcon; label: string; value: number }) {
+  const { t } = useLang();
+  const r = RATING[rate(value)];
   return (
-    <div className="mt-3 flex items-center justify-between gap-1">
-      {rotation.map((crop, i) => {
-        const Icon = cropIcon(crop);
-        const isPartner = i === 1;
-        return (
-          <div key={i} className="flex items-center gap-1">
-            <div className="flex flex-col items-center gap-1" style={{ width: 58 }}>
-              <div
-                className={`grid h-9 w-9 place-items-center rounded-full ${
-                  isPartner ? "bg-grass text-white" : "bg-grass/15 text-grass"
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-              </div>
-              <span className="text-center text-[10px] leading-tight text-muted">
-                {crop}
-              </span>
-            </div>
-            {i < rotation.length - 1 && (
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-hair" />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function SoilTrajectory({ traj, label }: { traj: number[]; label: string }) {
-  const rising = traj[traj.length - 1] >= traj[0];
-  const Trend = rising ? TrendingUp : TrendingDown;
-  return (
-    <div className="mt-3">
-      <div className="mb-1 flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-xs text-muted">
-          <Sprout className="h-3.5 w-3.5" /> {label}
-        </span>
-        <Trend className={`h-4 w-4 ${rising ? "text-grass" : "text-clay"}`} />
-      </div>
-      <div className="flex h-12 items-end gap-1.5">
-        {traj.map((v, i) => (
-          <motion.div
-            key={i}
-            className={`flex-1 rounded-t ${rising ? "bg-grass" : "bg-clay"}`}
-            animate={{ height: `${Math.max(10, v)}%` }}
-            transition={{ duration: 0.35 }}
-          />
-        ))}
-      </div>
-      <div className="mt-0.5 flex gap-1.5">
-        {traj.map((_, i) => (
-          <span key={i} className="flex-1 text-center text-[9px] text-muted">
-            Y{i + 1}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Bar({ Icon, label, value }: { Icon: LucideIcon; label: string; value: number }) {
-  const color = value >= 66 ? "bg-grass" : value >= 40 ? "bg-sun" : "bg-clay";
-  return (
-    <div className="flex items-center gap-2">
-      <span className="flex w-28 shrink-0 items-center gap-1 text-xs text-muted">
+    <div className="flex flex-col items-center gap-1 rounded-xl bg-paper/60 px-2 py-2">
+      <span className="flex items-center gap-1 text-[11px] text-muted">
         <Icon className="h-3.5 w-3.5" /> {label}
       </span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-hair">
-        <motion.div
-          className={`h-full rounded-full ${color}`}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 0.3 }}
-        />
-      </div>
-      <span className="w-6 shrink-0 text-right text-xs font-bold text-ink tabular-nums">
-        {value}
+      <span className="flex items-center gap-1.5 text-sm font-bold text-ink">
+        <span className={`h-2.5 w-2.5 rounded-full ${r.dot}`} /> {t(r.en, r.my)}
       </span>
     </div>
   );
 }
 
-function StrategyCard({
-  s,
-  rank,
-  labels,
-}: {
-  s: ScoredStrategy;
-  rank: number;
-  labels: { soil: string; water: string; res: string; best: string; overall: string };
-}) {
+function StrategyCard({ s }: { s: ScoredStrategy }) {
+  const { t, lang } = useLang();
+  const text = STRAT_TEXT[s.id];
+  const soilEnd = s.soilTrajectory[s.soilTrajectory.length - 1];
   return (
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
-      className={`rounded-2xl border p-4 ${
+      className={`flex h-full flex-col rounded-2xl border p-4 lg:p-5 ${
         s.isBest ? "border-grass bg-grass/[0.07] ring-1 ring-grass/50" : "border-hair bg-surface"
       }`}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-muted">#{rank}</span>
-            <h3 className="text-sm font-bold text-ink">{s.name}</h3>
-            {s.isBest && (
-              <span className="flex items-center gap-1 rounded-full bg-grass px-2 py-0.5 text-[10px] font-bold text-white">
-                <Star className="h-3 w-3 fill-white" /> {labels.best}
+      {/* Badge row: reserved on desktop so all three titles line up */}
+      {s.isBest ? (
+        <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-grass px-2 py-0.5 text-[11px] font-bold text-white">
+          <Star className="h-3 w-3 fill-white" /> {t("Best for your goals", "သင့်အတွက် အကောင်းဆုံး")}
+        </span>
+      ) : (
+        <span aria-hidden className="mb-2 hidden h-[20px] lg:block" />
+      )}
+      <h3 className="text-base font-bold text-ink">{t(...text.name)}</h3>
+
+      {/* 3-year plan: three equal tiles, never wraps unevenly */}
+      <ol className="mt-3 grid grid-cols-3 gap-1.5">
+        {s.rotation.map((crop, i) => {
+          const changed = i === 1 && s.id !== "baseline";
+          return (
+            <li
+              key={i}
+              className={`flex min-h-[3.25rem] flex-col justify-center rounded-xl px-2 py-1.5 text-center ${
+                changed ? "bg-grass text-white" : "bg-grass/10 text-ink"
+              }`}
+            >
+              <span className={`text-[10px] font-semibold ${changed ? "text-white/80" : "text-muted"}`}>
+                {t(`Year ${i + 1}`, `နှစ် ${i + 1}`)}
               </span>
-            )}
-          </div>
-          <p className="text-xs text-muted">{s.tag}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-extrabold text-ink tabular-nums">{s.overall}</div>
-          <div className="text-[10px] text-muted">{labels.overall}</div>
-        </div>
-      </div>
+              <span className="text-sm font-bold leading-tight">{cropLabel(crop, lang)}</span>
+            </li>
+          );
+        })}
+      </ol>
 
-      <RotationTimeline rotation={s.rotation} />
-      <SoilTrajectory traj={s.soilTrajectory} label={labels.soil} />
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">{t(...text.why)}</p>
+      {s.irrigationMm != null && (
+        <p className="mt-2 text-xs text-ink">
+          <Droplet className="mr-1 inline h-3.5 w-3.5 text-water" />
+          {s.irrigationMm < 50
+            ? t("Rain covers almost all the water this plan needs.", "ဤအစီအစဉ်အတွက် ရေကို မိုးက အများစု ဖြည့်ပေးသည်။")
+            : t(
+                `Extra water needed: about ${s.irrigationMm.toLocaleString()} mm over 3 years`,
+                `ထပ်လိုသောရေ: ၃ နှစ်တွင် ${s.irrigationMm.toLocaleString()} မမ ခန့်`
+              )}
+        </p>
+      )}
 
-      <div className="mt-3 space-y-1.5">
-        <Bar Icon={Droplet} label={labels.water} value={s.waterThrift} />
-        <Bar Icon={ShieldCheck} label={labels.res} value={s.resilience} />
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <Rating Icon={Sprout} label={t("Soil", "မြေ")} value={soilEnd} />
+        <Rating Icon={Droplet} label={t("Water", "ရေ")} value={s.waterThrift} />
+        <Rating Icon={ShieldCheck} label={t("Weather", "ရာသီဥတု")} value={s.resilience} />
       </div>
     </motion.div>
   );
 }
 
-export default function Screen5RotationCompare({ cropGoals }: { cropGoals: CropGoals }) {
+export default function Screen5RotationCompare({ cropGoals, pin }: { cropGoals: CropGoals; pin: LatLng | null }) {
   const { t } = useLang();
   const [rain, setRain] = useState(50);
   const [heat, setHeat] = useState(50);
+  const [inputs, setInputs] = useState<FieldInputs>({});
+
+  // Measured field inputs (optional): FAO-56 water per plan + SoilGrids soil health.
+  useEffect(() => {
+    if (!pin) return;
+    let active = true;
+    const crop = cropGoals.crop ?? "rice";
+    fetchJson<{ rotations: FieldInputs["water"] }>(`/api/water?lat=${pin.lat}&lng=${pin.lng}&crop=${crop}`)
+      .then((d) => active && setInputs((i) => ({ ...i, water: d.rotations })))
+      .catch(() => {});
+    fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health })))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [pin, cropGoals.crop]);
 
   const strategies = useMemo(
     () =>
-      scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat).sort(
+      scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, inputs).sort(
         (a, b) => b.goalFit - a.goalFit || b.overall - a.overall
       ),
-    [cropGoals.crop, cropGoals.goals, rain, heat]
+    [cropGoals.crop, cropGoals.goals, rain, heat, inputs]
   );
 
   function sliderLabel(kind: "rain" | "heat", v: number): string {
     if (kind === "rain") {
-      if (v === 50) return t("As expected", "မျှော်လင့်အတိုင်း");
-      const pct = Math.round((Math.abs(50 - v) / 50) * 100);
-      return v < 50 ? `${pct}% ${t("drier", "ပိုခြောက်")}` : `${pct}% ${t("wetter", "ပိုစို")}`;
+      const pct = Math.round(v - 50); // same mapping the season re-run uses
+      if (pct === 0) return t("As expected", "မျှော်လင့်အတိုင်း");
+      return pct < 0 ? `${-pct}% ${t("less rain", "မိုးနည်း")}` : `${pct}% ${t("more rain", "မိုးများ")}`;
     }
-    if (v === 50) return t("Normal", "ပုံမှန်");
     const d = Math.round(((v - 50) / 50) * 6 * 10) / 10;
+    if (d === 0) return t("Normal", "ပုံမှန်");
     return d > 0 ? `+${d}°C ${t("hotter", "ပိုပူ")}` : `${d}°C ${t("cooler", "ပိုအေး")}`;
   }
 
-  const labels = {
-    soil: t("Soil health over 3 yrs", "၃ နှစ် မြေကျန်းမာရေး"),
-    water: t("Water thrift", "ရေချွေတာ"),
-    res: t("Resilience", "ခံနိုင်ရည်"),
-    best: t("Best for your goals", "သင့်အတွက် အကောင်းဆုံး"),
-    overall: t("overall", "စုစုပေါင်း"),
-  };
-
   return (
-    <div className="h-full overflow-y-auto px-4 py-4">
-      <h2 className="text-lg font-extrabold text-ink">
-        {t("3 possible futures", "ဖြစ်နိုင်ခြေ ၃ မျိုး")}
-      </h2>
-      <p className="mt-0.5 text-sm text-muted">
-        {t(
-          "Drag the sliders — the cards re-rank for your goals.",
-          "ဆလိုက်ဒါ ဆွဲပါ — ကတ်များ သင့်ရည်မှန်းချက်အလိုက် ပြန်စီသည်။"
-        )}
-      </p>
-
+    <Screen
+      title={t("Compare 3 rotation plans", "လှည့်စိုက်နည်း ၃ မျိုး နှိုင်းယှဉ်")}
+      subtitle={t(
+        "What if the season is drier, wetter or hotter? Move the sliders and watch the plans re-rank.",
+        "ရာသီ ပိုခြောက်၊ ပိုစို၊ ပိုပူလျှင်? ဆလိုက်ဒါ ရွှေ့ပြီး အစီအစဉ်များ ပြန်စီသည်ကို ကြည့်ပါ။"
+      )}
+    >
+     <div className="md:grid md:grid-cols-2 md:gap-4">
       {/* Reactive field picture */}
-      <div className="mt-4 overflow-hidden rounded-2xl border border-hair">
+      <div className="overflow-hidden rounded-2xl border border-hair">
         <ReactiveField rain={rain} heat={heat} />
       </div>
 
       {/* What-if sliders */}
-      <div className={`mt-3 ${card} p-4`}>
+      <div className={`mt-3 md:mt-0 md:flex md:flex-col md:justify-center ${card} p-4 lg:p-6`}>
         <div className="mb-1 flex items-center justify-between text-sm">
           <span className="flex items-center gap-1.5 font-bold text-ink">
             <CloudRain className="h-4 w-4 text-water" /> {t("Rain", "မိုး")}
@@ -240,14 +179,17 @@ export default function Screen5RotationCompare({ cropGoals }: { cropGoals: CropG
           <span>{t("Cooler", "ပိုအေး")}</span>
           <span>{t("Hotter", "ပိုပူ")}</span>
         </div>
+        {pin && <ScenarioNote pin={pin} rain={rain} heat={heat} />}
       </div>
 
+     </div>
+
       {/* Re-ranking strategy cards */}
-      <div className="mt-3 flex flex-col gap-3 pb-2">
-        {strategies.map((s, i) => (
-          <StrategyCard key={s.id} s={s} rank={i + 1} labels={labels} />
+      <div className="mt-3 grid items-stretch gap-3 lg:mt-4 lg:grid-cols-3 lg:gap-4">
+        {strategies.map((s) => (
+          <StrategyCard key={s.id} s={s} />
         ))}
       </div>
-    </div>
+    </Screen>
   );
 }

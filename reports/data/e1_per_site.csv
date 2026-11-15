@@ -1,0 +1,10 @@
+site,rec_low_risk,random_low_risk,rec_high_risk,random_high_risk
+"Ayeyarwady delta, MM (rice)",0.4,0.254,0.4,0.404
+Central Ethiopia (teff),0.45,0.346,0.2,0.243
+"Fallon, Nevada, US (alfalfa)",0.45,0.314,0.15,0.368
+"Iowa, US (maize/soy)",0.35,0.275,0.35,0.446
+"Mandalay dry zone, MM",0.1,0.057,0.25,0.461
+"Maradi, Niger (millet)",0.45,0.211,0.3,0.475
+"Mato Grosso, BR (soy)",0.5,0.479,0.35,0.364
+"Punjab, IN (wheat/rice)",0.25,0.225,0.4,0.382
+Western Kenya (maize),0.6,0.371,0.2,0.321

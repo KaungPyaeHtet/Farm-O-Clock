@@ -30,3 +30,11 @@ export const STATUS_BAR = {
   watch: "bg-sun",
   alert: "bg-clay",
 } as const;
+
+/** One vocabulary for risk everywhere in the app (legend, calendar, cards). */
+export const RISK_WORDS = {
+  good: { en: "Low risk", my: "အန္တရာယ်နည်း" },
+  watch: { en: "Some risk", my: "သတိထားရန်" },
+  alert: { en: "High risk", my: "အန္တရာယ်များ" },
+  unknown: { en: "No data", my: "ဒေတာမရှိ" },
+} as const;

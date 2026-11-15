@@ -1,0 +1,19 @@
+site,version,share_low_risk,share_high_risk
+"Ayeyarwady delta, MM (rice)",v1,0.154,0.418
+"Ayeyarwady delta, MM (rice)",v1.1,0.314,0.289
+"Mandalay dry zone, MM",v1,0.132,0.346
+"Mandalay dry zone, MM",v1.1,0.161,0.289
+"Punjab, IN (wheat/rice)",v1,0.168,0.321
+"Punjab, IN (wheat/rice)",v1.1,0.207,0.418
+"Iowa, US (maize/soy)",v1,0.2,0.475
+"Iowa, US (maize/soy)",v1.1,0.293,0.357
+"Fallon, Nevada, US (alfalfa)",v1,0.0,1.0
+"Fallon, Nevada, US (alfalfa)",v1.1,0.436,0.221
+Western Kenya (maize),v1,0.0,1.0
+Western Kenya (maize),v1.1,0.461,0.214
+"Mato Grosso, BR (soy)",v1,0.0,0.479
+"Mato Grosso, BR (soy)",v1.1,0.414,0.314
+"Maradi, Niger (millet)",v1,0.229,0.386
+"Maradi, Niger (millet)",v1.1,0.246,0.371
+Central Ethiopia (teff),v1,0.0,1.0
+Central Ethiopia (teff),v1.1,0.489,0.207

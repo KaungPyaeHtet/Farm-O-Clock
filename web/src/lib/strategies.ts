@@ -21,6 +21,7 @@ export type ScoredStrategy = {
   overall: number; // 0-100
   goalFit: number; // 0-100 vs the farmer's chosen goals
   soilTrajectory: number[]; // soil health across years 1-3 (0-100)
+  irrigationMm: number | null; // FAO-56 extra water over 3 years (null = not measured)
   isBest: boolean;
 };
 
@@ -79,11 +80,20 @@ const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
  * @param rain 0-100 slider, 50 = as expected (lower = drier)
  * @param heat 0-100 slider, 50 = normal (higher = hotter)
  */
+/** Measured inputs from the model API (optional — rule-based fallback without them). */
+export type FieldInputs = {
+  /** FAO-56 water per strategy over 3 years, from /api/water */
+  water?: Partial<Record<StrategyId, { need_mm: number; effective_rain_mm: number; irrigation_mm: number }>>;
+  /** SoilGrids 0-100 soil-health score, from /api/soil */
+  soilHealth?: number;
+};
+
 export function scoreStrategies(
   crop: string | null,
   goals: GoalId[],
   rain: number,
-  heat: number
+  heat: number,
+  inputs: FieldInputs = {}
 ): ScoredStrategy[] {
   const c = crop ?? "rice";
   const cropName = CROP_NAME[c] ?? "Your crop";
@@ -114,7 +124,18 @@ export function scoreStrategies(
   const scored = (Object.keys(PROFILES) as StrategyId[]).map((id) => {
     const p = PROFILES[id];
     const soil = clamp(p.soil + p.nfix * 8 - hot * 12 - dry * 6 - wet * 4);
-    const waterThrift = clamp(100 - p.waterNeed - dry * 35 * (1 - p.drought));
+    // Water: measured FAO-56 irrigation need when available. Sliders: less rain → the missing
+    // effective rain must be irrigated; +1 °C ≈ +2.5 % crop water use (Hargreaves).
+    const w = inputs.water?.[id];
+    const rainPct = rain - 50; // same mapping as the slider label (−50 … +50 %)
+    const heatC = ((heat - 50) / 50) * 6;
+    const irrigationMm = w
+      ? Math.max(0, Math.round(w.irrigation_mm - (rainPct / 100) * w.effective_rain_mm + w.need_mm * 0.025 * heatC))
+      : null;
+    const waterThrift =
+      irrigationMm != null
+        ? clamp(100 - irrigationMm / 3 / 8) // 800 mm extra water per season → 0
+        : clamp(100 - p.waterNeed - dry * 35 * (1 - p.drought));
     const resilience = clamp(
       p.res - dry * 45 * (1 - p.drought) - hot * 35 * (1 - p.drought) - wet * 18
     );
@@ -136,7 +157,8 @@ export function scoreStrategies(
     const perYear =
       id === "soil" ? 9 + p.nfix * 4 : id === "water" ? 3 : -4;
     const adj = perYear - (dry + hot) * 2.5;
-    const start = clamp(48 + p.nfix * 6 + p.erosion * 6 - dry * 5 - hot * 4);
+    const baseSoil = inputs.soilHealth != null ? 0.5 * 48 + 0.5 * inputs.soilHealth : 48; // measured soil pulls the start
+    const start = clamp(baseSoil + p.nfix * 6 + p.erosion * 6 - dry * 5 - hot * 4);
     const soilTrajectory = [0, 1, 2].map((y) => clamp(start + y * adj));
 
     return {
@@ -148,6 +170,7 @@ export function scoreStrategies(
       overall,
       goalFit,
       soilTrajectory,
+      irrigationMm,
       isBest: false,
     };
   });
@@ -162,4 +185,36 @@ export function scoreStrategies(
   best.isBest = true;
 
   return scored;
+}
+
+// Plain-language names + one-line "why", shared by the Rotations and Plan screens.
+type Bi = [string, string];
+export const STRATEGY_TEXT: Record<string, { name: Bi; why: Bi }> = {
+  baseline: {
+    name: ["Keep current practice", "လက်ရှိအတိုင်း ဆက်စိုက်"],
+    why: ["Simple, but the soil wears out and a bad year hits harder.", "ရိုးရှင်းသော်လည်း မြေဆီလွှာ ယိုယွင်းပြီး ဆိုးသောနှစ်တွင် ထိခိုက်များသည်။"],
+  },
+  water: {
+    name: ["Water-saving rotation", "ရေချွေတာ လှည့်စိုက်"],
+    why: ["A drought-tolerant crop in year 2 uses less water and protects you if the rain fails.", "ဒုတိယနှစ်တွင် မိုးခေါင်ဒဏ်ခံသီးနှံ စိုက်၍ ရေနည်းနည်းသုံးပြီး မိုးနည်းလျှင် ကာကွယ်ပေးသည်။"],
+  },
+  soil: {
+    name: ["Soil-building rotation", "မြေဩဇာ တည်ဆောက် လှည့်စိုက်"],
+    why: ["A legume in year 2 puts nitrogen back into the soil, so you need less fertilizer.", "ဒုတိယနှစ်တွင် ပဲမျိုးစိုက်၍ မြေထဲ နိုက်ထရိုဂျင် ပြန်ဖြည့်ပြီး ဓာတ်မြေဩဇာ လျော့သုံးရသည်။"],
+  },
+};
+
+
+// Burmese names for every crop that can appear in a rotation (6.2). Please have a native
+// speaker check the less common ones (cover crops, pulses).
+const CROP_MY: Record<string, string> = {
+  Rice: "စပါး", Wheat: "ဂျုံ", Maize: "ပြောင်း", Soybean: "ပဲပိစပ်", Cotton: "ဝါ", Potato: "အာလူး",
+  Vegetables: "ဟင်းသီးဟင်းရွက်", Sugarcane: "ကြံ", Sorghum: "ပြောင်းလူး", Chickpea: "ကုလားပဲ",
+  "Pigeon pea": "ပဲစင်းငုံ", Millet: "လူး", Cowpea: "ပဲလွန်း", "Mung bean": "ပဲတီစိမ်း", Lentil: "ပဲနီလေး",
+  "Clover (cover)": "ကလိုဗာ (မြေဖုံး)", "Field pea": "စားတော်ပဲ", "Sunn hemp (cover)": "ပိုက်ဆံပင် (မြေဖုံး)",
+  "Your crop": "သင့်သီးနှံ",
+};
+
+export function cropLabel(name: string, lang: "en" | "my"): string {
+  return lang === "my" ? (CROP_MY[name] ?? name) : name;
 }
