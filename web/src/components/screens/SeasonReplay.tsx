@@ -5,6 +5,7 @@ import { CalendarCheck, MousePointerClick } from "lucide-react";
 import type { LatLng, ReplayData, ReplayRisk } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { card } from "@/lib/ui";
+import Science from "@/components/Science";
 
 const CELL: Record<ReplayRisk, string> = {
   good: "bg-grass",
@@ -175,6 +176,23 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
           <p className="mt-3 text-center text-[11px] leading-relaxed text-muted/70">
             {t("Source", "ရင်းမြစ်")}: {data.source}
           </p>
+          <Science>
+            <p>
+              {t(
+                "For every past year and sowing week, we replay the 90-day growing period and score:",
+                "နှစ်တိုင်း၊ စိုက်ပတ်တိုင်းအတွက် ၉၀ ရက် ကြီးထွားကာလကို ပြန်ကစားပြီး အဆင့်သတ်မှတ်သည်-"
+              )}
+            </p>
+            <p>• {t("Drought", "မိုးခေါင်")} — {t("driest 30-day rain total", "အခြောက်ဆုံး ၃၀ ရက် မိုးစုစုပေါင်း")}</p>
+            <p>• {t("Flood", "ရေကြီး")} — {t("wettest 7-day rain burst", "အစိုဆုံး ၇ ရက် မိုးရွာသွန်းမှု")}</p>
+            <p>• {t("Heat", "အပူ")} — {t("days at or above 35°C", "35°C နှင့်အထက် ရက်များ")}</p>
+            <p className="pt-1 opacity-80">
+              {t(
+                "Each cell is rated against the local spread of all 20 seasons, so colours adapt to your region.",
+                "အကွက်တစ်ခုစီကို ဒေသ၏ ရာသီ ၂၀ ၏ ပျံ့နှံ့မှုနှင့် နှိုင်းသတ်မှတ်သည်။"
+              )}
+            </p>
+          </Science>
         </>
       )}
     </div>
