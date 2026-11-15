@@ -6,6 +6,7 @@ import type { CropGoals } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { scoreStrategies, type ScoredStrategy } from "@/lib/strategies";
 import { card } from "@/lib/ui";
+import ReactiveField from "@/components/ReactiveField";
 
 function Bar({ Icon, label, value }: { Icon: LucideIcon; label: string; value: number }) {
   const color = value >= 66 ? "bg-grass" : value >= 40 ? "bg-sun" : "bg-clay";
@@ -110,8 +111,13 @@ export default function Screen5RotationCompare({ cropGoals }: { cropGoals: CropG
         )}
       </p>
 
+      {/* Reactive field picture — shows the chosen scenario at a glance */}
+      <div className="mt-4 overflow-hidden rounded-2xl border border-hair">
+        <ReactiveField rain={rain} heat={heat} />
+      </div>
+
       {/* What-if sliders */}
-      <div className={`mt-4 ${card} p-4`}>
+      <div className={`mt-3 ${card} p-4`}>
         <div className="mb-1 flex items-center justify-between text-sm">
           <span className="flex items-center gap-1.5 font-bold text-ink">
             <CloudRain className="h-4 w-4 text-water" /> {t("Rain", "မိုး")}
