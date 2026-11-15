@@ -11,6 +11,7 @@ import {
 import type { EnvData, LatLng, Metric } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { card, STATUS_DOT, STATUS_PILL } from "@/lib/ui";
+import Science from "@/components/Science";
 
 const CARDS: {
   key: keyof Pick<EnvData, "soilMoisture" | "rainfall" | "heat" | "terrain">;
@@ -130,9 +131,27 @@ export default function Screen2Environment({
       )}
 
       {data && (
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-muted/70">
-          {t("Source", "ရင်းမြစ်")}: {data.source}
-        </p>
+        <>
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-muted/70">
+            {t("Source", "ရင်းမြစ်")}: {data.source}
+          </p>
+          <Science>
+            <p>
+              <strong>NASA POWER</strong> daily (AG community), averaged over
+              the last {data.windowDays} days:
+            </p>
+            <p>• {t("Soil moisture", "မြေစို")} — GWETTOP ({t("surface wetness", "မျက်နှာပြင်စို")})</p>
+            <p>• {t("Rainfall", "မိုး")} — PRECTOTCORR (mm/day)</p>
+            <p>• {t("Heat", "အပူ")} — T2M_MAX (°C)</p>
+            <p>• {t("Slope", "စောက်")} — SRTM 30 m elevation (OpenTopoData)</p>
+            <p className="pt-1 opacity-80">
+              {t(
+                "POWER updates ~2-3 days behind real time.",
+                "POWER သည် အချိန်မှန်ထက် ၂-၃ ရက် နောက်ကျသည်။"
+              )}
+            </p>
+          </Science>
+        </>
       )}
     </div>
   );

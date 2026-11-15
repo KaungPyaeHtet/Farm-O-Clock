@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AlarmClock } from "lucide-react";
+import { AlarmClock, FlaskConical } from "lucide-react";
 import type { CropGoals, EnvData, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
+import { useScience } from "@/lib/science";
 import { primaryBtn, ghostBtn } from "@/lib/ui";
 import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
@@ -18,6 +19,7 @@ const LAST_BUILT_STEP = 7;
 
 export default function Wizard() {
   const { t } = useLang();
+  const science = useScience();
   const [step, setStep] = useState(1);
   const [pin, setPin] = useState<LatLng | null>(null);
   const [, setEnv] = useState<EnvData | null>(null);
@@ -70,9 +72,22 @@ export default function Wizard() {
             </span>
             Farm&nbsp;O&apos;Clock
           </h1>
-          <span className="text-xs font-semibold text-muted">
-            {t("Step", "အဆင့်")} {step}/{TOTAL_STEPS}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={science.toggle}
+              aria-pressed={science.show}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${
+                science.show
+                  ? "border-grass bg-grass text-white"
+                  : "border-hair text-muted"
+              }`}
+            >
+              <FlaskConical className="h-3.5 w-3.5" /> {t("Science", "သိပ္ပံ")}
+            </button>
+            <span className="text-xs font-semibold text-muted">
+              {step}/{TOTAL_STEPS}
+            </span>
+          </div>
         </div>
         <div className="mt-3 flex gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
