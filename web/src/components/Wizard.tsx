@@ -5,15 +5,17 @@ import type { CropGoals, EnvData, LatLng } from "@/lib/types";
 import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
 import Screen3CropGoals from "./screens/Screen3CropGoals";
+import Screen4Historical from "./screens/Screen4Historical";
 
 const TOTAL_STEPS = 6;
-const LAST_BUILT_STEP = 3; // screens 4–6 are placeholders for now
+const LAST_BUILT_STEP = 4; // screens 5–6 are placeholders for now
 
 // Per-step label for the primary "Next" button.
 const NEXT_LABEL: Record<number, string> = {
   1: "Continue →",
   2: "Next →",
   3: "Analyze Field →",
+  4: "Compare Strategies →",
 };
 
 export default function Wizard() {
@@ -38,7 +40,7 @@ export default function Wizard() {
       setStep((s) => s + 1);
     } else {
       alert(
-        "Screens 4–6 (historical context, rotation comparison, AI guidance) are coming in the next feature branches! 🚧"
+        "Screens 5–6 (rotation comparison, AI guidance) are coming in the next feature branches! 🚧"
       );
     }
   }
@@ -80,6 +82,7 @@ export default function Wizard() {
         {step === 3 && (
           <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />
         )}
+        {step === 4 && pin && <Screen4Historical pin={pin} />}
       </section>
 
       {/* Sticky footer */}
