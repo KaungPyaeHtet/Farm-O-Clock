@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarCheck, CloudSun, CloudRain, Sun } from "lucide-react";
+import { CalendarCheck, CloudSun, CloudRain, Sun, Waves, Thermometer } from "lucide-react";
 import type { HistoryData, LatLng, ReplayData, ReplayRisk } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
@@ -210,37 +210,81 @@ export default function SeasonReplay({ pin }: { pin: LatLng }) {
               </span>
             </div>
 
-            {/* Detail for the selected week */}
-            <div className="mt-4 border-t border-hair pt-3 text-sm">
-              <p className="font-bold text-ink">
-                {t(`Sown around ${col.label}`, `${col.label} ဝန်းကျင် စိုက်လျှင်`)}
-              </p>
-              <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-muted">
-                {(["good", "watch", "alert"] as const).map((r) => (
-                  <span key={r} className="flex items-center gap-1.5">
-                    <span className={`h-2.5 w-2.5 rounded-full ${CELL[r]}`} />
-                    <span className="font-semibold text-ink tabular-nums">{col[r]}</span> {t(RISK_WORDS[r].en, RISK_WORDS[r].my)}
-                  </span>
-                ))}
-              </p>
-              {pickedYear != null && data.years.find((y) => y.year === pickedYear) && (
-                <p className="mt-2 text-ink">
-                  <span className="font-semibold">{pickedYear}:</span>{" "}
-                  {reason(data.years.find((y) => y.year === pickedYear)!.cells[sel].reason)}
-                </p>
-              )}
-              {col.bad.length > 0 && (
-                <p className="mt-2 text-muted">
-                  {t("Bad years:", "ဆိုးခဲ့သောနှစ်များ:")}{" "}
-                  {col.bad.map((b, k) => (
-                    <span key={b.year}>
-                      <span className="font-semibold text-ink">{b.year}</span> ({reason(b.reason).toLowerCase()})
-                      {k < col.bad.length - 1 ? ", " : ""}
-                    </span>
-                  ))}
-                </p>
-              )}
-            </div>
+            {/* Detail for the selected week: split bar + bad years grouped by cause */}
+            {(() => {
+              const total = Math.max(1, col.good + col.watch + col.alert);
+              const CAUSES = [
+                { key: "Drought stress mid-season", Icon: Sun, en: "Drought mid-season", my: "ရာသီလယ် မိုးခေါင်", tint: "text-clay" },
+                { key: "Heavy rain / waterlogging", Icon: Waves, en: "Heavy rain / waterlogging", my: "မိုးသည်း / ရေဝပ်", tint: "text-water" },
+                { key: "Heat stress at flowering", Icon: Thermometer, en: "Heat at flowering", my: "ပန်းပွင့်ချိန် အပူ", tint: "text-[#9a6a0c]" },
+              ];
+              const groups = CAUSES.map((c) => ({ ...c, years: col.bad.filter((b) => b.reason === c.key).map((b) => b.year) })).filter(
+                (g) => g.years.length
+              );
+              const picked = pickedYear != null ? data.years.find((y) => y.year === pickedYear)?.cells[sel] : null;
+              return (
+                <div className="mt-4 border-t border-hair pt-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-base font-bold text-ink">{t(`If sown around ${col.label}`, `${col.label} ဝန်းကျင် စိုက်ခဲ့လျှင်`)}</p>
+                    <p className="text-xs text-muted">{t(`${total} past seasons`, `ယခင် ရာသီ ${total} ခု`)}</p>
+                  </div>
+
+                  {/* split bar */}
+                  <div className="mt-2 flex h-3 gap-[2px] overflow-hidden rounded-full">
+                    {(["good", "watch", "alert"] as const).map((r) =>
+                      col[r] ? <div key={r} className={CELL[r]} style={{ width: `${(col[r] / total) * 100}%` }} /> : null
+                    )}
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                    {(["good", "watch", "alert"] as const).map((r) => (
+                      <div key={r} className="rounded-xl bg-paper/70 py-1.5">
+                        <div className="text-lg font-extrabold tabular-nums text-ink">{col[r]}</div>
+                        <div className="flex items-center justify-center gap-1 text-[11px] text-muted">
+                          <span className={`h-2 w-2 rounded-full ${CELL[r]}`} /> {t(RISK_WORDS[r].en, RISK_WORDS[r].my)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* the square the farmer tapped */}
+                  {picked && (
+                    <p className="mt-3 flex items-center gap-2 rounded-xl border border-ink/15 px-3 py-2 text-sm text-ink">
+                      <span className={`h-3 w-3 shrink-0 rounded-[3px] ${CELL[picked.risk]}`} />
+                      <span className="font-bold tabular-nums">{pickedYear}</span>
+                      <span className="text-muted">{reason(picked.reason)}</span>
+                    </p>
+                  )}
+
+                  {/* what went wrong, grouped by cause */}
+                  {groups.length > 0 && (
+                    <div className="mt-3 space-y-2.5">
+                      <p className="text-xs font-semibold text-muted">{t("What went wrong in the high-risk years", "အန္တရာယ်များခဲ့သောနှစ်များတွင် ဖြစ်ခဲ့သည်")}</p>
+                      {groups.map((g) => (
+                        <div key={g.key}>
+                          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+                            <g.Icon className={`h-4 w-4 ${g.tint}`} /> {t(g.en, g.my)}
+                            <span className="font-normal text-muted">· {t(`${g.years.length} year${g.years.length > 1 ? "s" : ""}`, `${g.years.length} နှစ်`)}</span>
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-1.5 pl-5">
+                            {g.years.map((y) => (
+                              <button
+                                key={y}
+                                onClick={() => setPickedYear(y)}
+                                className={`rounded-full px-2 py-0.5 text-xs tabular-nums transition ${
+                                  y === pickedYear ? "bg-ink text-white" : "bg-clay/10 text-ink hover:bg-clay/20"
+                                }`}
+                              >
+                                {y}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

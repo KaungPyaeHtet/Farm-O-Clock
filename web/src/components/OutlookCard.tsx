@@ -21,7 +21,18 @@ const HAZARD = {
   heat: { en: "extreme heat", my: "အပူလွန်ကဲ" },
 } as const;
 
-export default function OutlookCard({ pin, startDoy }: { pin: LatLng; startDoy: number }) {
+export default function OutlookCard({
+  pin,
+  startDoy,
+  pastBad,
+  pastTotal,
+}: {
+  pin: LatLng;
+  startDoy: number;
+  /** high-risk seasons for this week in the same 20 seasons as the grid (keeps every number on the screen consistent) */
+  pastBad: number;
+  pastTotal: number;
+}) {
   const { t } = useLang();
   const [data, setData] = useState<OutlookData | null>(null);
   const [failed, setFailed] = useState(false);
@@ -46,7 +57,7 @@ export default function OutlookCard({ pin, startDoy }: { pin: LatLng; startDoy: 
     );
 
   const w = nearest(data.weeks, startDoy);
-  const usualOnly = w.high_risk_usual == null ? null : Math.round(w.high_risk_usual * 100);
+  const usualOnly = pastTotal ? Math.round((100 * pastBad) / pastTotal) : null;
 
   // Beyond 30 days: use the seasonal forecast if it covers this sowing window.
   if (!w.in_range && w.forecast) {
@@ -109,14 +120,17 @@ export default function OutlookCard({ pin, startDoy }: { pin: LatLng; startDoy: 
         </p>
         {usualOnly != null && (
           <p className="mt-1 text-sm text-muted">
-            {t(`In a usual year, ${usualOnly}% of seasons sown this week go badly.`, `ပုံမှန်နှစ်တွင် ဤအပတ် စိုက်လျှင် ${usualOnly}% ဆိုးတတ်သည်။`)}
+            {t(
+              `In the last ${pastTotal} years, ${pastBad} seasons sown this week went badly.`,
+              `လွန်ခဲ့သော ${pastTotal} နှစ်တွင် ဤအပတ် စိုက်ခဲ့သော ရာသီ ${pastBad} ခု ဆိုးခဲ့သည်။`
+            )}
           </p>
         )}
       </div>
     );
 
   const pct = Math.round(w.high_risk * 100);
-  const usual = w.high_risk_usual == null ? null : Math.round(w.high_risk_usual * 100);
+  const usual = usualOnly;
   const diff = usual == null ? 0 : pct - usual;
   const trend =
     diff >= 5

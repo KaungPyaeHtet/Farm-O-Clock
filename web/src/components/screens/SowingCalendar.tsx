@@ -17,6 +17,13 @@ const STRIP: Record<ReplayRisk, string> = {
   unknown: "bg-hair",
 };
 
+/** Risk word for a sowing week from its calibrated chance of a low-risk season (same seasons as the grid). */
+function weekLevel(a: { chance: number | null; goodCount: number; risk: ReplayRisk }, n: number): ReplayRisk {
+  const p = a.chance ?? (n ? a.goodCount / n : null);
+  if (p == null) return a.risk;
+  return p >= 0.45 ? "good" : p >= 0.25 ? "watch" : "alert";
+}
+
 /** 0-100 relative score → the same 3 words used everywhere else. */
 function level(v: number): Exclude<ReplayRisk, "unknown"> {
   return v < 40 ? "good" : v < 60 ? "watch" : "alert";
@@ -62,6 +69,11 @@ export default function SowingCalendar({ pin }: { pin: LatLng }) {
   const best = data ? bestUpcoming(dates, (i) => data.weekAgg[i].chance ?? data.weekAgg[i].goodCount / 20) : 0;
   const sel = picked ?? best;
   const agg = data?.weekAgg[sel];
+  const selLevel: ReplayRisk = data && agg ? weekLevel(agg, data.years.length) : "unknown";
+  // High-risk seasons for this week in the grid's 20 seasons (shown as the "usual" in the outlook card).
+  const pastCells = data ? data.years.map((y) => y.cells[sel]?.risk).filter((r) => r && r !== "unknown") : [];
+  const pastBad = pastCells.filter((r) => r === "alert").length;
+  const pastTotal = pastCells.length;
   const d = dates[sel];
   const anyPassed = dates.some((x) => x.passed);
   const usualBestPassed = data ? dates[data.bestWeekIndex]?.passed && data.bestWeekIndex !== best : false;
@@ -118,9 +130,9 @@ export default function SowingCalendar({ pin }: { pin: LatLng }) {
                   </span>
                 )}
               </div>
-              {agg.risk !== "unknown" && (
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_PILL[agg.risk]}`}>
-                  {t(RISK_WORDS[agg.risk].en, RISK_WORDS[agg.risk].my)}
+              {selLevel !== "unknown" && (
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_PILL[selLevel]}`}>
+                  {t(RISK_WORDS[selLevel].en, RISK_WORDS[selLevel].my)}
                 </span>
               )}
             </div>
@@ -128,7 +140,7 @@ export default function SowingCalendar({ pin }: { pin: LatLng }) {
             <div className="relative mt-4 h-9">
               <div className="absolute inset-x-0 top-1/2 flex h-5 -translate-y-1/2 gap-[2px] overflow-hidden rounded-full">
                 {data.weekAgg.map((a, i) => (
-                  <div key={i} className={`flex-1 ${STRIP[a.risk]} ${dates[i]?.passed ? "opacity-25" : ""}`} />
+                  <div key={i} className={`flex-1 ${STRIP[weekLevel(a, data.years.length)]} ${dates[i]?.passed ? "opacity-25" : ""}`} />
                 ))}
               </div>
               {todayPos != null && (
@@ -194,7 +206,7 @@ export default function SowingCalendar({ pin }: { pin: LatLng }) {
             </div>
           </div>
           <div className="mt-3 lg:col-span-2 lg:mt-0">
-            <OutlookCard pin={pin} startDoy={data.weeks[sel].startDoy} />
+            <OutlookCard pin={pin} startDoy={data.weeks[sel].startDoy} pastBad={pastBad} pastTotal={pastTotal} />
           </div>
         </div>
       )}
