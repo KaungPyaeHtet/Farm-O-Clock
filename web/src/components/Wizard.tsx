@@ -6,9 +6,10 @@ import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
 import Screen3CropGoals from "./screens/Screen3CropGoals";
 import Screen4Historical from "./screens/Screen4Historical";
+import Screen5RotationCompare from "./screens/Screen5RotationCompare";
 
 const TOTAL_STEPS = 6;
-const LAST_BUILT_STEP = 4; // screens 5–6 are placeholders for now
+const LAST_BUILT_STEP = 5; // screen 6 is a placeholder for now
 
 // Per-step label for the primary "Next" button.
 const NEXT_LABEL: Record<number, string> = {
@@ -16,6 +17,7 @@ const NEXT_LABEL: Record<number, string> = {
   2: "Next →",
   3: "Analyze Field →",
   4: "Compare Strategies →",
+  5: "Get AI Guidance →",
 };
 
 export default function Wizard() {
@@ -40,7 +42,7 @@ export default function Wizard() {
       setStep((s) => s + 1);
     } else {
       alert(
-        "Screens 5–6 (rotation comparison, AI guidance) are coming in the next feature branches! 🚧"
+        "Screen 6 (AI guidance & checklist) is coming in the next feature branch! 🚧"
       );
     }
   }
@@ -83,6 +85,7 @@ export default function Wizard() {
           <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />
         )}
         {step === 4 && pin && <Screen4Historical pin={pin} />}
+        {step === 5 && <Screen5RotationCompare cropGoals={cropGoals} />}
       </section>
 
       {/* Sticky footer */}
