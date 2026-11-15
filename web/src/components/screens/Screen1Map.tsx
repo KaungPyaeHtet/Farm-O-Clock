@@ -1,13 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { MapPin } from "lucide-react";
 import type { LatLng } from "@/lib/types";
+import { useLang } from "@/lib/i18n";
 
 // Leaflet touches `window`, so the map only loads in the browser (ssr: false).
 const FarmMap = dynamic(() => import("@/components/FarmMap"), {
   ssr: false,
   loading: () => (
-    <div className="grid h-full w-full place-items-center bg-neutral-100 text-sm text-neutral-500">
+    <div className="grid h-full w-full place-items-center bg-[#cdd9c0] text-sm text-muted">
       Loading map…
     </div>
   ),
@@ -27,14 +29,16 @@ export default function Screen1Map({
   pin: LatLng | null;
   onPick: (p: LatLng) => void;
 }) {
+  const { t } = useLang();
   return (
     <div className="relative h-full w-full">
       <FarmMap position={pin} onPick={onPick} />
 
       {/* Floating instruction card */}
       <div className="pointer-events-none absolute left-1/2 top-3 z-[1000] -translate-x-1/2">
-        <div className="rounded-full bg-neutral-900/85 px-4 py-2 text-center text-sm font-medium text-white shadow-lg backdrop-blur">
-          🗺️ Tap the map to drop your farm pin
+        <div className="flex items-center gap-2 rounded-full border border-white/15 bg-ink/80 px-4 py-2 text-center text-sm font-semibold text-white shadow-lg backdrop-blur">
+          <MapPin className="h-4 w-4 shrink-0" />
+          {t("Tap the map to drop your farm pin", "သင့်လယ်ကို ပြမည့် မြေပုံပေါ် တို့ပါ")}
         </div>
       </div>
 
@@ -44,7 +48,7 @@ export default function Screen1Map({
           <button
             key={p.label}
             onClick={() => onPick({ lat: p.lat, lng: p.lng })}
-            className="rounded-full border border-neutral-300 bg-white/95 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition hover:bg-green-50 hover:text-green-700"
+            className="rounded-full border border-white/15 bg-ink/75 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur transition hover:bg-grass"
           >
             {p.label}
           </button>
