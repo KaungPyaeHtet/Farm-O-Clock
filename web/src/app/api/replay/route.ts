@@ -22,6 +22,14 @@ type ReplayResponse = {
   growDays: number;
   weeks: { label: string; startDoy: number }[];
   years: { year: number; cells: Cell[] }[];
+  // Per-week aggregate (0-100) across all years — drives the sowing calendar.
+  weekAgg: {
+    drought: number;
+    flood: number;
+    heat: number;
+    risk: Risk;
+    goodCount: number;
+  }[];
   bestWeekIndex: number;
   source: string;
 };
@@ -178,9 +186,12 @@ export async function GET(req: NextRequest) {
     const fSorted = [...fSamp].sort((a, b) => a - b);
     const hSorted = [...hSamp].sort((a, b) => a - b);
 
+    // Per-week accumulators for the sowing-calendar aggregate.
+    const wk = weeks.map(() => ({ d: 0, f: 0, h: 0, n: 0, good: 0 }));
+
     // Second pass: rate each cell by its worst percentile risk.
     const yearsOut = years.map((y, yi) => {
-      const cells: Cell[] = raw[yi].map((m) => {
+      const cells: Cell[] = raw[yi].map((m, ci) => {
         if (Number.isNaN(m.driest30)) return { risk: "unknown", reason: "No data yet" };
         const pD = 1 - pct(dSorted, m.driest30); // low rain in driest spell = high drought
         const pF = pct(fSorted, m.wettest7); // high burst rain = flood
@@ -201,18 +212,39 @@ export async function GET(req: NextRequest) {
           else if (pF === severe) reason = "Heavy rain / waterlogging";
           else reason = "Heat stress at flowering";
         }
+        wk[ci].d += pD;
+        wk[ci].f += pF;
+        wk[ci].h += pH;
+        wk[ci].n += 1;
+        if (risk === "good") wk[ci].good += 1;
         return { risk, reason };
       });
       return { year: y, cells };
+    });
+
+    const r100 = (x: number) => Math.round(x * 100);
+    const weekAgg = wk.map((a) => {
+      const d = a.n ? a.d / a.n : 0;
+      const f = a.n ? a.f / a.n : 0;
+      const h = a.n ? a.h / a.n : 0;
+      const combined = 0.45 * d + 0.3 * f + 0.25 * h;
+      const risk: Risk =
+        combined >= 0.55 ? "alert" : combined >= 0.42 ? "watch" : "good";
+      return {
+        drought: r100(d),
+        flood: r100(f),
+        heat: r100(h),
+        risk,
+        goodCount: a.good,
+      };
     });
 
     // Best sowing week = column with the most "good" seasons.
     let bestWeekIndex = 0;
     let bestGood = -1;
     for (let w = 0; w < weeks.length; w++) {
-      const good = yearsOut.filter((yr) => yr.cells[w].risk === "good").length;
-      if (good > bestGood) {
-        bestGood = good;
+      if (wk[w].good > bestGood) {
+        bestGood = wk[w].good;
         bestWeekIndex = w;
       }
     }
@@ -223,6 +255,7 @@ export async function GET(req: NextRequest) {
       growDays: GROW_DAYS,
       weeks,
       years: yearsOut,
+      weekAgg,
       bestWeekIndex,
       source: `NASA POWER daily, ${years.length}-season replay (${GROW_DAYS}-day growing window)`,
     };

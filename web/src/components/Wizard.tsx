@@ -9,11 +9,12 @@ import Screen1Map from "./screens/Screen1Map";
 import Screen2Environment from "./screens/Screen2Environment";
 import Screen3CropGoals from "./screens/Screen3CropGoals";
 import SeasonReplay from "./screens/SeasonReplay";
+import SowingCalendar from "./screens/SowingCalendar";
 import Screen5RotationCompare from "./screens/Screen5RotationCompare";
 import Screen6Guidance from "./screens/Screen6Guidance";
 
-const TOTAL_STEPS = 6;
-const LAST_BUILT_STEP = 6;
+const TOTAL_STEPS = 7;
+const LAST_BUILT_STEP = 7;
 
 export default function Wizard() {
   const { t } = useLang();
@@ -30,9 +31,10 @@ export default function Wizard() {
     1: t("Continue", "ဆက်သွားမည်"),
     2: t("Next", "နောက်တစ်ဆင့်"),
     3: t("Analyze Field", "လယ်ကို သုံးသပ်မည်"),
-    4: t("Compare Strategies", "နည်းလမ်းများ နှိုင်းယှဉ်မည်"),
-    5: t("Get AI Guidance", "AI လမ်းညွှန် ရယူမည်"),
-    6: t("↻ Plan another field", "↻ နောက်လယ် စီစဉ်မည်"),
+    4: t("Pick Sowing Date", "စိုက်ရက် ရွေးမည်"),
+    5: t("Compare Strategies", "နည်းလမ်းများ နှိုင်းယှဉ်မည်"),
+    6: t("Get AI Guidance", "AI လမ်းညွှန် ရယူမည်"),
+    7: t("↻ Plan another field", "↻ နောက်လယ် စီစဉ်မည်"),
   };
 
   const canNext =
@@ -94,8 +96,9 @@ export default function Wizard() {
           <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />
         )}
         {step === 4 && pin && <SeasonReplay pin={pin} />}
-        {step === 5 && <Screen5RotationCompare cropGoals={cropGoals} />}
-        {step === 6 && <Screen6Guidance pin={pin} cropGoals={cropGoals} />}
+        {step === 5 && pin && <SowingCalendar pin={pin} />}
+        {step === 6 && <Screen5RotationCompare cropGoals={cropGoals} />}
+        {step === 7 && <Screen6Guidance pin={pin} cropGoals={cropGoals} />}
       </section>
 
       {/* Sticky footer */}
