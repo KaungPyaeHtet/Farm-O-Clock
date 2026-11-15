@@ -10,8 +10,7 @@ import {
 import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-export type LatLng = { lat: number; lng: number };
+import type { LatLng } from "@/lib/types";
 
 // Custom teardrop pin so we don't depend on Leaflet's default marker images
 // (which break under bundlers). Pure inline SVG, green to match the theme.
@@ -65,8 +64,8 @@ export default function FarmMap({
       className="h-full w-full"
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics"
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
       />
       <ClickHandler onPick={onPick} />
       <RecenterOnPin position={position} />

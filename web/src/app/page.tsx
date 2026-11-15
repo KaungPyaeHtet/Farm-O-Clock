@@ -1,5 +1,5 @@
-import MapScreen from "@/components/MapScreen";
+import Wizard from "@/components/Wizard";
 
 export default function Home() {
-  return <MapScreen />;
+  return <Wizard />;
 }
