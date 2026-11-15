@@ -93,12 +93,18 @@ class Location:
 
     def seasonal_forecast(self, weeks_out: list[dict]) -> bool:
         """Adds week['forecast'] for sowing weeks the seasonal forecast covers. Returns availability."""
+        self.forecast_max_lead = None
         try:
             months = monthly_anomalies(self.lat, self.lng)
         except Exception:
             for w in weeks_out:
                 w["forecast"] = None
             return False
+        if months:
+            # Furthest sowing date the forecast can cover (window_delta needs 60 of the 90 days).
+            y, m = map(int, max(months).split("-"))
+            last_day = (pd.Timestamp(y, m, 1) + pd.offsets.MonthEnd(1)).date()
+            self.forecast_max_lead = max(0, (last_day - self.data_end.date()).days - 59)
         for w in weeks_out:
             start = (self.data_end + pd.Timedelta(days=w["lead_days"])).date()
             delta = window_delta(months, start)
@@ -185,7 +191,9 @@ class Location:
                            "root_zone_wetness_anomaly": z("root30"), "topsoil_wetness_anomaly": z("top30"),
                            "temperature_anomaly": z("t2m30")},
             "weeks": weeks_out,
-            "seasonal_forecast": {"available": forecast_ok, "source": "Open-Meteo Seasonal API (CC BY 4.0)"},
+            "seasonal_forecast": {"available": forecast_ok, "source": "Open-Meteo Seasonal API (CC BY 4.0)",
+                                  "max_lead_days": getattr(self, "forecast_max_lead", None)},
+            "max_lead_days": MAX_LEAD_DAYS,
             "model": {"version": model["version"], "trained": model["trained"],
                       "held_out_auc": {k.removeprefix("y_"): v["held_out"]["auc"] for k, v in model["targets"].items()}},
             "note": f"Probabilities use NASA conditions up to data_through and are only meaningful for weeks with "

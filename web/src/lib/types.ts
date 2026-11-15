@@ -96,7 +96,9 @@ export type OutlookData = {
   data_through: string;
   conditions: Record<string, number | null>;
   weeks: OutlookWeek[];
-  seasonal_forecast: { available: boolean; source: string };
+  seasonal_forecast: { available: boolean; source: string; max_lead_days?: number | null };
+  /** the NASA-conditions outlook is valid for sowing up to this many days after data_through */
+  max_lead_days?: number;
   model: { version: string; trained: string; held_out_auc: Record<string, number> };
   note: string;
 };

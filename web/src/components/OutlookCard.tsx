@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CloudSun, Loader2 } from "lucide-react";
+import { CalendarClock, CloudSun, Loader2 } from "lucide-react";
 import type { LatLng, OutlookData, OutlookWeek } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { fetchJson } from "@/lib/fetchJson";
 import { card } from "@/lib/ui";
+import { fmtDate } from "@/lib/season";
+
+const DAY = 86_400_000;
 
 // "This year's outlook" for the chosen sowing week. Fed by the Python model
 // API via /api/outlook. Renders nothing if the backend is not available.
@@ -24,11 +27,17 @@ const HAZARD = {
 export default function OutlookCard({
   pin,
   startDoy,
+  sowDate,
+  pastGood,
   pastBad,
   pastTotal,
 }: {
   pin: LatLng;
   startDoy: number;
+  /** the real upcoming date of this sowing week */
+  sowDate: Date;
+  /** low-risk seasons for this week in the grid's seasons */
+  pastGood: number;
   /** high-risk seasons for this week in the same 20 seasons as the grid (keeps every number on the screen consistent) */
   pastBad: number;
   pastTotal: number;
@@ -108,26 +117,77 @@ export default function OutlookCard({
     );
   }
 
-  // Too far ahead and no forecast: today's soil and rain don't tell us much yet.
-  if (!w.in_range)
+  // Too far ahead for any forecast: show what usually happens at this week, and when real
+  // information for this year arrives (forecast window, then the full check with this year's soil and rain).
+  if (!w.in_range) {
+    const dataEnd = new Date(`${data.data_through}T00:00:00Z`).getTime();
+    const sow = sowDate.getTime();
+    const fcLead = data.seasonal_forecast.max_lead_days;
+    const fcFrom = fcLead != null ? new Date(Math.max(dataEnd, sow - fcLead * DAY) + 5 * DAY) : null; // + NASA data delay
+    const checkFrom = new Date(sow - (data.max_lead_days ?? 30) * DAY + 5 * DAY);
+    const usualWorst = (["drought", "flood", "heat"] as const)
+      .map((h) => ({ h, n: Math.round((w[`${h}_usual`] ?? 0) * pastTotal) }))
+      .sort((a, b) => b.n - a.n)[0];
+    const seasons = (n: number) => t(`${n} season${n === 1 ? "" : "s"}`, `ရာသီ ${n} ခု`);
     return (
       <div className={`${card} p-4 lg:p-6`}>
-        <h3 className="flex items-center gap-1.5 text-sm font-bold text-ink">
-          <CloudSun className="h-4 w-4 text-water" /> {t("This year's outlook", "ယခုနှစ် အလားအလာ")}
-        </h3>
-        <p className="mt-2 text-sm text-ink">
-          {t("Too early to tell for this week. Check again closer to sowing.", "ဤအပတ်အတွက် စောလွန်းသေးသည်။ စိုက်ချိန်နီးမှ ပြန်ကြည့်ပါ။")}
-        </p>
-        {usualOnly != null && (
-          <p className="mt-1 text-sm text-muted">
-            {t(
-              `In the last ${pastTotal} years, ${pastBad} seasons sown this week went badly.`,
-              `လွန်ခဲ့သော ${pastTotal} နှစ်တွင် ဤအပတ် စိုက်ခဲ့သော ရာသီ ${pastBad} ခု ဆိုးခဲ့သည်။`
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-ink">
+            <CloudSun className="h-4 w-4 text-water" /> {t("This year's outlook", "ယခုနှစ် အလားအလာ")}
+          </h3>
+          <span className="rounded-full bg-hair px-2.5 py-1 text-xs font-bold text-muted">
+            {t("Too early for a forecast", "ခန့်မှန်းရန် စောသေးသည်")}
+          </span>
+        </div>
+        {pastTotal > 0 && (
+          <>
+            <p className="mt-2 text-sm font-semibold text-ink">
+              {t("What usually happens when sown this week", "ဤအပတ် စိုက်လျှင် ပုံမှန်ဖြစ်လေ့ရှိသည်")}
+            </p>
+            <p className="mt-1 text-sm text-ink">
+              <span className="text-2xl font-extrabold tabular-nums">
+                {pastGood}/{pastTotal}
+              </span>{" "}
+              {t("past seasons went well", "ယခင်ရာသီ အဆင်ပြေခဲ့")}
+              {pastBad > 0 && (
+                <span className="text-muted">
+                  {" "}
+                  · {t(`${seasons(pastBad)} went badly`, `${seasons(pastBad)} ဆိုးခဲ့`)}
+                </span>
+              )}
+            </p>
+            {usualWorst.n > 0 && (
+              <p className="mt-1 text-sm text-muted">
+                {t("Most common problem:", "အဖြစ်များဆုံး ပြဿနာ:")}{" "}
+                <span className="font-semibold text-ink">{t(HAZARD[usualWorst.h].en, HAZARD[usualWorst.h].my)}</span>{" "}
+                {t(`(${seasons(usualWorst.n)} of ${pastTotal})`, `(${pastTotal} ခုအနက် ${usualWorst.n} ခု)`)}
+              </p>
             )}
-          </p>
+          </>
         )}
+        <div className="mt-3 flex items-start gap-2 rounded-xl bg-water/8 p-3 text-sm text-ink">
+          <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-water" />
+          <div>
+            <p className="font-semibold">{t("Come back for this year's picture:", "ယခုနှစ်အတွက် ပြန်ကြည့်ရန်:")}</p>
+            <ul className="mt-1 space-y-0.5 text-muted">
+              {fcFrom && (
+                <li>
+                  • {t("Rain and heat forecast for this week from", "ဤအပတ်အတွက် မိုး၊ အပူ ခန့်မှန်းချက်")}{" "}
+                  <span className="font-semibold text-ink">{fmtDate(fcFrom)}</span>
+                  {t("", " မှစ၍")}
+                </li>
+              )}
+              <li>
+                • {t("Full check with this year's soil and rain from", "ယခုနှစ် မြေ၊ မိုး ဖြင့် အပြည့်အစုံ စစ်ဆေးချက်")}{" "}
+                <span className="font-semibold text-ink">{fmtDate(checkFrom)}</span>
+                {t("", " မှစ၍")}
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     );
+  }
 
   const pct = Math.round(w.high_risk * 100);
   const usual = usualOnly;

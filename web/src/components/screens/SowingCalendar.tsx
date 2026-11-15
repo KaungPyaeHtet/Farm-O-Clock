@@ -218,7 +218,14 @@ export default function SowingCalendar({
             </div>
           </div>
           <div className="mt-3 lg:col-span-2 lg:mt-0">
-            <OutlookCard pin={pin} startDoy={data.weeks[sel].startDoy} pastBad={pastBad} pastTotal={pastTotal} />
+            <OutlookCard
+              pin={pin}
+              startDoy={data.weeks[sel].startDoy}
+              sowDate={d.passed ? nextYear(d.date) : d.date}
+              pastGood={agg.goodCount}
+              pastBad={pastBad}
+              pastTotal={pastTotal}
+            />
           </div>
         </div>
       )}
