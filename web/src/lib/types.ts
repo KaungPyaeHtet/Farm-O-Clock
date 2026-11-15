@@ -131,6 +131,7 @@ export type SoilData = {
   phLevel: "acidic" | "good" | "alkaline";
   health: number; // 0-100 soil-health score
   asOf?: string; // set when SoilGrids was down and this is the last known result (ISO time)
+  nearbyKm?: number; // …taken from a cached spot this far away (not this exact field)
 };
 
 /** /api/vegetation — MODIS NDVI greenness at the pin. */

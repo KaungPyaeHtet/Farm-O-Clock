@@ -26,6 +26,8 @@ Detail: `backend/README.md` (API, models, deploy), `reports/README.md` (accuracy
 ## 2. Supabase (P0)
 - [x] Supabase → SQL Editor → paste **`supabase/schema.sql`** → Run (verified 2026-11-15: 5 tables, function, private bucket)
 - [ ] Rotate the legacy **JWT secret** (it was pasted in chat): Project Settings → JWT Keys
+- [ ] Re-run the `validate_observation` function from `supabase/schema.sql` in the SQL editor (2026-11-16: reports with no
+      satellite reading now stay `pending`)
 - [x] Put the **`sb_secret_…`** key in `web/.env.local` (done) and `backend/.env` (still empty; only needed for `upload_results`) (`SUPABASE_SECRET_KEY=`), and never in chat or git
 - [x] Restart `npm run dev`; open step 4 twice for one place: 2nd load fast + rows in `nasa_cache` (2.8 s → 0.6 s)
 - [x] Step 7 → answer the soil question → a row appears in `observations` (tested via API, auto-validated; test row deleted)

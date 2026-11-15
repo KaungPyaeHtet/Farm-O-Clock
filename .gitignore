@@ -3,3 +3,4 @@
 .env.local
 backend/clip
 web/clip
+submission.md

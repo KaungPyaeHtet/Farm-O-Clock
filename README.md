@@ -57,7 +57,7 @@ web/src/
       geocode/, geocode/reverse  place search + pin -> "Town, Region, Country" (Nominatim)
       landcover/              -> ESA WorldCover: refuse water, warn on buildings
       environment/            -> 30-day soil moisture, rain, heat (NASA POWER) + slope (SRTM)
-      soil/                   -> SoilGrids texture + soil health (last known result if SoilGrids is down)
+      soil/                   -> SoilGrids texture + soil health (ISRIC WCS map server; last known result if down)
       vegetation/             -> green cover, MODIS NDVI (via the Python API)
       replay/                 -> 20-season × 14-sowing-week risk grid (NASA POWER)
       history/                -> last 90 days vs the same 90 days in 20 past years: Dry / Normal / Wet
