@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlarmClock, Check } from "lucide-react";
+import { Check } from "lucide-react";
+import Logo from "./Logo";
 import type { CropGoals, LatLng, SowPick, WhatIf } from "@/lib/types";
 import type { LandCover } from "@/app/api/landcover/route";
 import { useLang } from "@/lib/i18n";
@@ -132,9 +133,7 @@ export default function Wizard() {
       <header className="shrink-0 border-b border-hair bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 pt-4 pb-3 lg:px-8 lg:py-4">
           <h1 className="flex shrink-0 items-center gap-2 text-lg font-extrabold tracking-tight text-ink">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-grass text-white">
-              <AlarmClock className="h-5 w-5" />
-            </span>
+            <Logo className="h-8 w-8" />
             Farm&nbsp;O&apos;Clock
           </h1>
 

@@ -65,6 +65,30 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+/** The Farm O'Clock "orbit clock" logo (same drawing as app/icon.svg), `size` px square. */
+function drawLogo(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size / 100, size / 100);
+  roundRect(ctx, 0, 0, 100, 100, 23);
+  ctx.fillStyle = "#2F8A3E";
+  ctx.fill();
+  ctx.strokeStyle = ctx.fillStyle = "#fff";
+  ctx.lineCap = "round";
+  ctx.lineWidth = 6.5;
+  ctx.stroke(new Path2D("M74.47,41.59 A27,27 0 1 1 61.41,28.53"));
+  ctx.lineWidth = 6;
+  ctx.stroke(new Path2D("M50,53 L50,36"));
+  ctx.fill(new Path2D("M50,46 C48,40 43,37 36,38 C37,44 43,47 50,46 Z"));
+  ctx.fill(new Path2D("M50,41 C52,36 56,34 61,35 C60,40 55,42 50,41 Z"));
+  for (const [cx, cy] of [[69.09, 33.91], [50, 53]]) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 /** Lays out (and, if `draw`, paints) the card. Returns the total height. */
 export function render(ctx: CanvasRenderingContext2D, d: ShareCardData, F: string, draw: boolean): number {
   const IW = W - PAD * 2;
@@ -95,6 +119,7 @@ export function render(ctx: CanvasRenderingContext2D, d: ShareCardData, F: strin
     ctx.fillStyle = C.dark;
     ctx.fillRect(0, 0, W, headerH);
   }
+  if (draw) drawLogo(ctx, W - PAD - 76, 40, 76);
   let y = 64 + 26;
   text(d.brand, PAD, y, `700 24px ${F}`, C.greenSoft);
   y += 28;

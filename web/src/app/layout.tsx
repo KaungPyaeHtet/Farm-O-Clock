@@ -14,10 +14,18 @@ const myanmar = Noto_Sans_Myanmar({
   weight: ["400", "500", "600", "700"],
 });
 
+const description =
+  "Drop a pin on any farm on Earth and get NASA-data-driven planting-risk, sowing windows, and crop-rotation guidance — in English or Burmese.";
+
+// Icons and the share preview come from files in this folder: favicon.ico, icon.svg,
+// apple-icon.png, opengraph-image.png (the Farm O'Clock "orbit clock" logo).
 export const metadata: Metadata = {
+  metadataBase: new URL("https://farm-oclock-five.vercel.app"),
   title: "Farm O'Clock — Planting-Risk & Crop Rotation Planner",
-  description:
-    "Drop a pin on any farm on Earth and get NASA-data-driven planting-risk, sowing windows, and crop-rotation guidance — in English or Burmese.",
+  description,
+  applicationName: "Farm O'Clock",
+  openGraph: { title: "Farm O'Clock", description, siteName: "Farm O'Clock", type: "website" },
+  twitter: { card: "summary_large_image", title: "Farm O'Clock", description },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
