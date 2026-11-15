@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Volume2, Square, Share2, Check, Hand } from "lucide-react";
+import { Volume2, Square, ImageDown, Copy, Check, Hand } from "lucide-react";
 import type { CropGoals, HistoryData, LatLng, Verdict } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { scoreStrategies } from "@/lib/strategies";
 import { buildBrief } from "@/lib/brief";
+import { shareCard } from "@/lib/shareCard";
 import { card } from "@/lib/ui";
 import Science from "@/components/Science";
 
@@ -22,6 +23,7 @@ export default function Screen6Guidance({
   const [speaking, setSpeaking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fieldDamp, setFieldDamp] = useState<boolean | null>(null);
+  const [sowing, setSowing] = useState<string | null>(null);
 
   const best = useMemo(() => {
     const scored = scoreStrategies(cropGoals.crop, cropGoals.goals, 50, 50);
@@ -34,6 +36,15 @@ export default function Screen6Guidance({
     fetch(`/api/history?lat=${pin.lat}&lng=${pin.lng}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: HistoryData | null) => active && d && setVerdict(d.verdict))
+      .catch(() => {});
+    fetch(`/api/replay?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (d: { weeks?: { label: string }[]; bestWeekIndex?: number } | null) => {
+          if (active && d?.weeks && d.bestWeekIndex != null)
+            setSowing(d.weeks[d.bestWeekIndex].label);
+        }
+      )
       .catch(() => {});
     return () => {
       active = false;
@@ -78,6 +89,42 @@ export default function Screen6Guidance({
     navigator.clipboard?.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
+    });
+  }
+
+  function shareImage() {
+    const verdictText: Record<Verdict, string> = {
+      dry: t("Drier than usual", "ပုံမှန်ထက် ခြောက်သွေ့"),
+      normal: t("About normal", "ပုံမှန်"),
+      wet: t("Wetter than usual", "ပုံမှန်ထက် စိုစွတ်"),
+    };
+    shareCard({
+      subtitle: t("Your planting plan", "သင့် စိုက်ပျိုးရေး အစီအစဉ်"),
+      location: pin
+        ? `${pin.lat.toFixed(2)}, ${pin.lng.toFixed(2)}`
+        : t("Your field", "သင့်လယ်"),
+      lines: [
+        {
+          label: t("Season", "ရာသီ"),
+          value: verdict ? verdictText[verdict] : "—",
+        },
+        {
+          label: t("Best rotation", "အကောင်းဆုံး လှည့်စိုက်"),
+          value: `${best.name}: ${best.rotation.join(" → ")}`,
+        },
+        ...(sowing
+          ? [
+              {
+                label: t("Best sowing window", "အကောင်းဆုံး စိုက်ချိန်"),
+                value: t(`Around ${sowing}`, `${sowing} ဝန်းကျင်`),
+              },
+            ]
+          : []),
+      ],
+      checklistTitle: t("Check before you plant", "မစိုက်ခင် စစ်ဆေးပါ"),
+      checklist: brief.checklist,
+      footer: t("Powered by NASA Earth data", "NASA ကမ္ဘာ့ဒေတာဖြင့်"),
+      shareTitle: "Farm O’Clock",
     });
   }
 
@@ -194,20 +241,32 @@ export default function Screen6Guidance({
       </div>
 
       {/* Share */}
-      <button
-        onClick={copySummary}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-hair bg-surface py-3.5 text-sm font-bold text-ink transition hover:bg-black/[0.03]"
-      >
-        {copied ? (
-          <>
-            <Check className="h-4 w-4 text-grass" /> {t("Copied!", "ကူးယူပြီး!")}
-          </>
-        ) : (
-          <>
-            <Share2 className="h-4 w-4" /> {t("Copy summary to share", "အကျဉ်းချုပ် ကူးယူမည်")}
-          </>
+      <div className="mt-5 flex gap-2">
+        <button
+          onClick={shareImage}
+          className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-grass py-3.5 text-sm font-bold text-white transition hover:bg-grass-strong"
+        >
+          <ImageDown className="h-4 w-4" />
+          {t("Share picture card", "ပုံ မျှဝေမည်")}
+        </button>
+        <button
+          onClick={copySummary}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-hair bg-surface py-3.5 text-sm font-bold text-ink transition hover:bg-black/[0.03]"
+        >
+          {copied ? (
+            <Check className="h-4 w-4 text-grass" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+          {copied ? t("Copied", "ကူးပြီး") : t("Copy text", "စာ ကူးမည်")}
+        </button>
+      </div>
+      <p className="mt-2 text-center text-[11px] text-muted">
+        {t(
+          "Share the picture on Viber or Messenger — no reading needed.",
+          "Viber သို့ Messenger တွင် ပုံကို မျှဝေပါ — စာဖတ်စရာ မလိုပါ။"
         )}
-      </button>
+      </p>
 
       <Science>
         <p>
