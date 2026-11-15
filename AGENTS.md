@@ -83,7 +83,8 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
 - Fixed 2026-11-15: `api/replay` percentile ties bug (cool/arid sites were 100 % "alert"). TS and Python both use mid-rank pct, pH=0 if no hot days.
 - Raw "k of 20 seasons" confidence is over-confident above 0.6. Rain/Heat sliders only affect strategy cards, not the risk grid.
 - Outlook probabilities are only shown for sowing ≤ 30 days after the latest NASA data (model trained on pre-sowing conditions);
-  30 days–6 months uses the Open-Meteo seasonal forecast (unvalidated). Drought model has no skill on unseen regions (E6).
+  30 days–~4 months (forecast reach, `seasonal_forecast.max_lead_days`) uses the Open-Meteo seasonal forecast (unvalidated);
+  further out, OutlookCard shows the usual outcome + the dates when the forecast and full check arrive. Drought model has no skill on unseen regions (E6).
 - Engine = v1.1 + candidate weeks from the 1985+ record + window sums rounded to 0.01 mm. Change TS and Python together.
 - Rotation scores (`strategies.ts`) and brief (`brief.ts`) are still heuristics/templates. Moving the what-if sliders shifts the
   "best" pick toward weather resilience (up to 80 % at the slider ends); at 50/50 it is the goal fit only. Lint is clean.
