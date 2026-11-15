@@ -71,7 +71,7 @@ export default function Wizard() {
     1: t("Continue", "ဆက်သွားမည်"),
     2: t("Next", "နောက်တစ်ဆင့်"),
     3: t("Analyze field", "လယ်ကို သုံးသပ်မည်"),
-    4: t("Pick sowing date", "စိုက်ရက် ရွေးမည်"),
+    4: t("Next: choose sowing date", "နောက်တစ်ဆင့်: စိုက်ရက် ရွေးမည်"),
     5: t("Compare rotations", "လှည့်စိုက်နည်း နှိုင်းယှဉ်မည်"),
     6: t("See my plan", "အစီအစဉ် ကြည့်မည်"),
     7: t("Plan another field", "နောက်လယ် စီစဉ်မည်"),
@@ -223,7 +223,10 @@ export default function Wizard() {
               {t("Back", "နောက်သို့")}
             </button>
             <button disabled={!canNext} onClick={next} className={`flex-[2] py-3.5 text-sm ${primaryBtn}`}>
-              {nextLabel[step]}
+              <span className="inline-flex items-center justify-center gap-1.5">
+                {nextLabel[step]}
+                {step < 7 && <span aria-hidden>→</span>}
+              </span>
             </button>
           </div>
         </div>

@@ -35,7 +35,7 @@ function Rating({ Icon, label, value }: { Icon: LucideIcon; label: string; value
   );
 }
 
-function StrategyCard({ s }: { s: ScoredStrategy }) {
+function StrategyCard({ s, whatIf }: { s: ScoredStrategy; whatIf: boolean }) {
   const { t, lang } = useLang();
   const text = STRAT_TEXT[s.id];
   const soilEnd = s.soilTrajectory[s.soilTrajectory.length - 1];
@@ -50,7 +50,10 @@ function StrategyCard({ s }: { s: ScoredStrategy }) {
       {/* Badge row: reserved on desktop so all three titles line up */}
       {s.isBest ? (
         <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-grass px-2 py-0.5 text-[11px] font-bold text-white">
-          <Star className="h-3 w-3 fill-white" /> {t("Best for your goals", "သင့်အတွက် အကောင်းဆုံး")}
+          <Star className="h-3 w-3 fill-white" />{" "}
+          {whatIf
+            ? t("Best for this what-if", "ဤ \"ဖြစ်ခဲ့လျှင်\" အတွက် အကောင်းဆုံး")
+            : t("Best for your goals", "သင့်အတွက် အကောင်းဆုံး")}
         </span>
       ) : (
         <span aria-hidden className="mb-2 hidden h-[20px] lg:block" />
@@ -134,7 +137,7 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
   const strategies = useMemo(
     () =>
       scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, { ...inputs, country }).sort(
-        (a, b) => b.goalFit - a.goalFit || b.overall - a.overall
+        (a, b) => Number(b.isBest) - Number(a.isBest) || b.goalFit - a.goalFit || b.overall - a.overall
       ),
     [cropGoals.crop, cropGoals.goals, rain, heat, inputs, country]
   );
@@ -166,6 +169,14 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
 
       {/* What-if sliders */}
       <div className={`mt-3 md:mt-0 md:flex md:flex-col md:justify-center ${card} p-4 lg:p-6`}>
+        <div className="mb-3">
+          <span className="inline-flex items-center rounded-full bg-water/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-water">
+            {t("What if…?", "ဖြစ်ခဲ့လျှင်…?")}
+          </span>
+          <p className="mt-1 text-xs text-muted">
+            {t("Pretend weather, not a forecast. Move to test your plans.", "ခန့်မှန်းချက် မဟုတ်ပါ၊ စမ်းကြည့်ရန်သာ။ ရွှေ့ပြီး အစီအစဉ်များကို စမ်းပါ။")}
+          </p>
+        </div>
         <div className="mb-1 flex items-center justify-between text-sm">
           <span className="flex items-center gap-1.5 font-bold text-ink">
             <CloudRain className="h-4 w-4 text-water" /> {t("Rain", "မိုး")}
@@ -197,7 +208,7 @@ export default function Screen5RotationCompare({ cropGoals, pin, country }: { cr
       {/* Re-ranking strategy cards */}
       <div className="mt-3 grid items-stretch gap-3 lg:mt-4 lg:grid-cols-3 lg:gap-4">
         {strategies.map((s) => (
-          <StrategyCard key={s.id} s={s} />
+          <StrategyCard key={s.id} s={s} whatIf={rain !== 50 || heat !== 50} />
         ))}
       </div>
     </Screen>

@@ -23,7 +23,7 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
     `observations` (farmer reports → Supabase), `geocode/reverse` (pin → "Town, Region, Country"),
     `outlook` + `scenario` + `vegetation` + `rotation` (Python API via `lib/backend.ts`; 503 → UI hides those panels),
     `landcover` (ESA WorldCover: pins on water are refused, built-up gets a warning), `plans` (save finished plans),
-    `soil` (SoilGrids). The plan text is a fixed template (`lib/brief.ts`); the user chose NOT to use any LLM/AI API. Calibrated "N in 10" chance:
+    `soil` (SoilGrids), `warm` (wakes the Python API when the app opens). The plan text is a fixed template (`lib/brief.ts`); the user chose NOT to use any LLM/AI API. Calibrated "N in 10" chance:
     `lib/confidence.ts` + `lib/confidence-curve.json` (copied from `backend/models/confidence_curve.json` — keep in sync).
     `replay`/`history` cache raw POWER pulls in Supabase via `withNasaCache`.
   - UI conventions: **farmer-facing only** — no method/source/"how it's built" text in the app (that lives in `reports/`
@@ -62,17 +62,21 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
 ## Data
 
 - **In use:** NASA POWER daily point API (`community=AG`; `PRECTOTCORR`, `T2M`, `T2M_MAX`, `GWETTOP`, `GWETROOT`; fill = -999,
-  ~5-day latency), SRTM 30 m, Nominatim.
-- **Not yet used:** SMAP, GPM IMERG, ECOSTRESS, MODIS/Landsat NDVI, GRACE, OpenET, SoilGrids, crop/market stats.
+  ~5-day latency), SRTM 30 m (OpenTopoData), MODIS Terra NDVI MOD13Q1 (Planetary Computer; needs ≥ 12 clear views in 4 yrs,
+  else 422 and the card is hidden), SoilGrids, ESA WorldCover, Open-Meteo seasonal forecast, FAOSTAT yields/prices
+  (`lib/crop-economics.json`), Nominatim + Esri map tiles.
+- **Not yet used:** SMAP, GPM IMERG, ECOSTRESS, Landsat, GRACE, OpenET, market prices beyond FAOSTAT.
 
 ## Known issues (see backend/eval/REPORT.md)
 
+- AI use is declared in `AI_DECLARATION.md` (keep it up to date).
 - Fixed 2026-11-15: `api/replay` percentile ties bug (cool/arid sites were 100 % "alert"). TS and Python both use mid-rank pct, pH=0 if no hot days.
 - Raw "k of 20 seasons" confidence is over-confident above 0.6. Rain/Heat sliders only affect strategy cards, not the risk grid.
 - Outlook probabilities are only shown for sowing ≤ 30 days after the latest NASA data (model trained on pre-sowing conditions);
   30 days–6 months uses the Open-Meteo seasonal forecast (unvalidated). Drought model has no skill on unseen regions (E6).
 - Engine = v1.1 + candidate weeks from the 1985+ record + window sums rounded to 0.01 mm. Change TS and Python together.
-- Rotation scores (`strategies.ts`) and brief (`brief.ts`) are still heuristics/templates. Lint: one pre-existing error in `Screen1Map.tsx`.
+- Rotation scores (`strategies.ts`) and brief (`brief.ts`) are still heuristics/templates. Moving the what-if sliders shifts the
+  "best" pick toward weather resilience (up to 80 % at the slider ends); at 50/50 it is the goal fit only. Lint is clean.
 
 ## Conventions
 

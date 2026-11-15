@@ -183,6 +183,7 @@ function monthRanges(ms: string[], names: string[]): string {
 
 function GreenCard({ veg, loading }: { veg: VegetationData | null; loading: boolean }) {
   const { t, lang } = useLang();
+  const [today] = useState(() => Date.now());
   const head = (
     <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
       <Leaf className="h-4 w-4" /> {t("Green cover", "အပင်ဖုံးလွှမ်းမှု")}
@@ -215,12 +216,18 @@ function GreenCard({ veg, loading }: { veg: VegetationData | null; loading: bool
       ? { s: "good", en: "Greener than usual", my: "ပုံမှန်ထက် ပိုစိမ်း" }
       : { s: "good", en: "Usual for this time", my: "ဤအချိန်အတွက် ပုံမှန်" };
   const monthly = veg.monthly_ndvi ?? {};
-  const now = veg.latest ? new Date(veg.latest.date).getUTCMonth() : -1;
+  const shot = veg.latest ? new Date(veg.latest.date) : null;
+  const now = shot ? shot.getUTCMonth() : -1;
+  // cloudy places can go months without a clear photo: then "vs usual" is not about now
+  const fresh = !!shot && today - shot.getTime() < 60 * 864e5;
+  const shotDate = shot
+    ? `${shot.getUTCDate()} ${(lang === "my" ? MONTHS_MY : MONTHS)[now].slice(0, lang === "my" ? undefined : 3)} ${shot.getUTCFullYear()}`
+    : "";
   return (
     <div className={`${card} col-span-2 p-4 lg:p-5`}>
       <div className="flex items-center justify-between gap-2">
         {head}
-        {veg.usual_for_date != null && (
+        {fresh && veg.usual_for_date != null && (
           <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_PILL[vs.s]}`}>{t(vs.en, vs.my)}</span>
         )}
       </div>
@@ -246,6 +253,12 @@ function GreenCard({ veg, loading }: { veg: VegetationData | null; loading: bool
           <span key={m} className="flex-1 text-center">{m.slice(0, 3)}</span>
         ))}
       </div>
+      {shot && (
+        <p className="mt-2 text-xs text-muted">
+          {t("Last clear photo:", "နောက်ဆုံး ကြည်လင်သောဓာတ်ပုံ:")} <span className="font-semibold text-ink">{shotDate}</span>
+          {!fresh && t(" (often cloudy here)", " (ဤနေရာ မကြာခဏ တိမ်ထူသည်)")}
+        </p>
+      )}
       {!!veg.bare_months?.length && (
         <p className="mt-2 text-xs text-muted">
           {t("Usually bare:", "ပုံမှန် ဗလာဖြစ်ချိန်:")}{" "}

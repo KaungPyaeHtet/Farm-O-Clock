@@ -220,10 +220,13 @@ export function scoreStrategies(
     };
   });
 
-  // Mark the best fit for the farmer's goals (ties broken by overall).
+  // Mark the best fit for the farmer's goals (ties broken by overall). When the what-if
+  // sliders move away from "as expected", coping with that weather counts more (up to 80 % at the slider ends).
+  const shift = 0.8 * Math.min(1, Math.max(Math.abs(dryness), Math.abs(heatX)));
+  const pickScore = (s: (typeof scored)[number]) => s.goalFit * (1 - shift) + s.resilience * shift;
   let best = scored[0];
   for (const s of scored) {
-    if (s.goalFit > best.goalFit || (s.goalFit === best.goalFit && s.overall > best.overall)) {
+    if (pickScore(s) > pickScore(best) || (pickScore(s) === pickScore(best) && s.overall > best.overall)) {
       best = s;
     }
   }

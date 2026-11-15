@@ -29,6 +29,14 @@ web/src/
       replay/route.ts         -> 20-year x 14-sowing-week risk replay (NASA POWER)
       history/route.ts        -> this season vs 20-yr baseline: Dry / Normal / Wet
       observations/route.ts   -> farmer field reports (Supabase)
+      geocode/reverse         -> pin -> "Town, Region, Country"
+      landcover/route.ts      -> ESA WorldCover: refuses pins on water, warns on buildings
+      soil/route.ts           -> SoilGrids soil texture + soil-health score
+      vegetation/route.ts     -> field greenness, MODIS NDVI (via the Python API)
+      outlook, scenario,
+      rotation/route.ts       -> Python model API (risk outlook, what-if re-run, rotation crops + water)
+      plans/route.ts          -> save finished plans (Supabase)
+      warm/route.ts           -> wakes the Python API when the app opens
   components/
     Wizard.tsx                -> 7-step flow, state, back-button handling
     screens/                  -> one file per step (see below)
@@ -45,22 +53,29 @@ supabase/schema.sql           -> database schema to paste into Supabase
 | Step | Screen | Data |
 |---|---|---|
 | 1 | `Screen1Map` — search or drop a pin | `/api/geocode` |
-| 2 | `Screen2Environment` — soil moisture, rain, heat, slope cards | `/api/environment` |
+| 2 | `Screen2Environment` — soil moisture, rain, heat, slope, green cover, soil cards | `/api/environment`, `/api/vegetation`, `/api/soil` |
 | 3 | `Screen3CropGoals` — crop, 1–2 goals, constraints | local |
 | 4 | `SeasonReplay` — years x sowing-weeks risk grid + Dry/Normal/Wet block | `/api/replay`, `/api/history` |
 | 5 | `SowingCalendar` — draggable sowing date + confidence | `/api/replay` |
-| 6 | `Screen5RotationCompare` — 3 strategies + Rain/Heat what-if sliders | `lib/strategies.ts` |
-| 7 | `Screen6Guidance` — brief, terms, checklist, voice, share, soil check | `/api/history`, `/api/replay`, `/api/observations`, `lib/brief.ts` |
+| 6 | `Screen5RotationCompare` — 3 strategies + Rain/Heat what-if sliders | `lib/strategies.ts`, `/api/rotation`, `/api/scenario` |
+| 7 | `Screen6Guidance` — brief, terms, checklist, share, soil check | `/api/history`, `/api/replay`, `/api/observations`, `/api/plans`, `lib/brief.ts` |
 
 ## Data sources in use
 
-- **NASA POWER** (daily point API, `community=AG`): `GWETTOP` (topsoil wetness), `PRECTOTCORR`
+- **NASA POWER** (daily point API, `community=AG`): `GWETTOP`, `GWETROOT` (soil wetness), `PRECTOTCORR`
   (rain), `T2M`, `T2M_MAX`
+- **NASA MODIS NDVI** (MOD13Q1, 250 m, through Microsoft Planetary Computer) for green cover
 - **SRTM 30 m elevation**, through OpenTopoData, for slope
-- **OpenStreetMap Nominatim** for geocoding
+- **SoilGrids** (soil texture, organic carbon), **ESA WorldCover** (land cover)
+- **Open-Meteo** seasonal forecast, **FAOSTAT** yields and prices (income estimate)
+- **OpenStreetMap Nominatim** for place names, **Esri** map imagery
 
 ## Not built yet
 
 - The rotation scores use rules plus measured FAO-56 water use and SoilGrids soil data. The plan text is a fixed
   English/Burmese template; by choice, the app uses no AI/LLM API.
-- Not integrated yet: SMAP and GPM IMERG (need an Earthdata login), ECOSTRESS, OpenET, market prices.
+- Not integrated yet: SMAP and GPM IMERG (need an Earthdata login), ECOSTRESS, OpenET, local market prices.
+
+## AI use
+
+See [`AI_DECLARATION.md`](AI_DECLARATION.md).
