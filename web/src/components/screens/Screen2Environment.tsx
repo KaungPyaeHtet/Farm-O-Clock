@@ -140,8 +140,11 @@ function SoilCard({ soil }: { soil: SoilData }) {
         <div className="mt-1 text-2xl font-extrabold text-ink">{t(soil.texture, TEXTURE_MY[soil.texture] ?? soil.texture)}</div>
         {soil.asOf && (
           <p className="text-[11px] text-muted">
-            {t(`Last known result, ${new Date(soil.asOf).toISOString().slice(0, 10)} (soil map is down now)`,
-               `နောက်ဆုံးရလဒ် ${new Date(soil.asOf).toISOString().slice(0, 10)} (မြေပုံ ယခု မရပါ)`)}
+            {soil.nearbyKm != null
+              ? t(`From a spot ~${soil.nearbyKm} km away, ${new Date(soil.asOf).toISOString().slice(0, 10)} (soil map is down now)`,
+                  `~${soil.nearbyKm} ကီလိုမီတာ အကွာ နေရာမှ၊ ${new Date(soil.asOf).toISOString().slice(0, 10)} (မြေပုံ ယခု မရပါ)`)
+              : t(`Last known result, ${new Date(soil.asOf).toISOString().slice(0, 10)} (soil map is down now)`,
+                  `နောက်ဆုံးရလဒ် ${new Date(soil.asOf).toISOString().slice(0, 10)} (မြေပုံ ယခု မရပါ)`)}
           </p>
         )}
       </div>
@@ -326,6 +329,16 @@ export default function Screen2Environment({ pin, place }: { pin: LatLng; place:
             ? CARDS.map((c) => <SkeletonCard key={c.key} />)
             : CARDS.map((c) => <MetricCard key={c.key} c={c} metric={data[c.key]} />)}
           {soil && <SoilCard soil={soil} />}
+          {!soil && !soilDown && (
+            <div className={`${card} col-span-2 p-4 lg:p-5`}>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+                <Layers className="h-4 w-4" /> {t("Soil", "မြေဆီလွှာ")}
+              </span>
+              <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("Checking soil map…", "မြေဆီလွှာ မြေပုံ စစ်နေသည်…")}
+              </p>
+            </div>
+          )}
           {!soil && soilDown && (
             <div className={`${card} col-span-2 p-4 lg:p-5`}>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">

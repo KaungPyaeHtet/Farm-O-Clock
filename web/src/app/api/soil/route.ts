@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
   }
   try {
     let asOf: string | undefined;
+    let nearbyKm: number | undefined;
     const body = await withNasaCache<SoilData>("soilgrids", lat, lng, 24 * 30, async () => {
       // One retry if SoilGrids errors or times out (bounded: 2 × 12 s), then give up.
       const tryQuery = async (a: number, b: number) => {
@@ -96,8 +97,15 @@ export async function GET(req: NextRequest) {
         soc: Math.round(soc * 10) / 10, ph: Math.round(ph * 10) / 10,
         organic, phLevel, health: Math.round(0.6 * socScore + 0.4 * phScore),
       } satisfies SoilData;
-    }, { cell: 0.001, staleOnError: (d) => (asOf = d) });
-    return NextResponse.json(asOf ? { ...body, asOf } : body);
+    }, {
+      cell: 0.001,
+      nearbyDeg: 0.15, // ~15 km: soil type changes slowly; labelled as "nearby" in the UI
+      staleOnError: (d, dist) => {
+        asOf = d;
+        if (dist > 0.002) nearbyKm = Math.round(dist * 111);
+      },
+    });
+    return NextResponse.json(asOf ? { ...body, asOf, ...(nearbyKm != null ? { nearbyKm } : {}) } : body);
   } catch (err) {
     return NextResponse.json({ error: `Soil data unavailable: ${(err as Error).message}` }, { status: 502 });
   }

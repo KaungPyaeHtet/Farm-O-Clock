@@ -52,6 +52,7 @@ export default function Screen6Guidance({
   const [frostShare, setFrostShare] = useState<number | null>(null);
   const [soilState, setSoilState] = useState<"loading" | "ok" | "down">("loading");
   const [soilAsOf, setSoilAsOf] = useState<string | null>(null);
+  const [soilNearKm, setSoilNearKm] = useState<number | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [saveTry, setSaveTry] = useState(0);
   const [dampState, setDampState] = useState<"idle" | "sending" | "sent" | "failed" | "limit">("idle");
@@ -97,6 +98,7 @@ export default function Screen6Guidance({
         setInputs((i) => ({ ...i, soilHealth: d.health, soilTex: { sand: d.sand, silt: d.silt, clay: d.clay, soc: d.soc } }));
         setSoilText({ texture: d.texture, organic: d.organic });
         setSoilAsOf(d.asOf ?? null);
+        setSoilNearKm(d.nearbyKm ?? null);
         setSoilState("ok");
       })
       .catch(() => active && setSoilState("down"));
@@ -332,8 +334,11 @@ export default function Screen6Guidance({
             )}
             {soilState === "ok" && soilAsOf && (
               <p className="mt-2 text-xs text-muted">
-                {t(`Soil: last known result from ${fmtDate(new Date(soilAsOf))} (soil map is down now).`,
-                   `မြေ: ${fmtDate(new Date(soilAsOf))} ရက်က နောက်ဆုံးရလဒ် (မြေပုံ ယခု မရပါ)။`)}
+                {soilNearKm != null
+                  ? t(`Soil: from a spot ~${soilNearKm} km away, ${fmtDate(new Date(soilAsOf))} (soil map is down now).`,
+                      `မြေ: ~${soilNearKm} ကီလိုမီတာ အကွာ နေရာမှ၊ ${fmtDate(new Date(soilAsOf))} (မြေပုံ ယခု မရပါ)။`)
+                  : t(`Soil: last known result from ${fmtDate(new Date(soilAsOf))} (soil map is down now).`,
+                      `မြေ: ${fmtDate(new Date(soilAsOf))} ရက်က နောက်ဆုံးရလဒ် (မြေပုံ ယခု မရပါ)။`)}
               </p>
             )}
           </div>
