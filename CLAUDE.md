@@ -75,8 +75,10 @@ what-if sliders, and ends with an English/Burmese brief and a field-check checkl
   constraints) used by Rotations, the plan, share card and save. `frost_sensitive` → `/v1/rotation` drops partner crops
   with frost (daily mean ≤ 2 °C) in > 1 of 10 seasons; `no_machinery` → −10 goal fit for plans adding a new crop + checklist.
   `history` compares equal 90-day windows by date (crosses New Year; `web/tests/history.test.ts`). Python `Location.base`
-  = same 20 years as the web grid (current year included). Soil/NDVI cache cells are ~100 m (`withNasaCache(..., {cell})`);
-  soil falls back to the last known result with its date. Observations: satellite value fetched server-side, ≤ 3/day per
+  = same 20 years as the web grid (current year included). Soil/NDVI cache cells are ~100 m (`withNasaCache(..., {cell})`).
+  Soil is read from ISRIC's WCS map server (`maps.isric.org`, ~4 km window in its native projection, pin pixel or median of
+  nearby soil pixels; `lib/tiffPixel.ts`) because the REST API often takes 12+ s; REST is the backup; if both fail, the last
+  known result (this spot or nearest cached ≤ 15 km, labelled) is used. Live check: `tests/soil.test.ts`. Observations: satellite value fetched server-side, ≤ 3/day per
   spot, reports capped at 3:1 vs satellite. POST bodies need numeric lat/lng (`lib/validate.ts`). Plan saves are
   idempotent (`saveId`) and show saved/failed + retry. Web tests: `cd web && npm test`.
 - npm audit: 9 moderate dev-only advisories (minimatch via typescript-eslint 8.72.2, no fix released yet); production deps clean.
