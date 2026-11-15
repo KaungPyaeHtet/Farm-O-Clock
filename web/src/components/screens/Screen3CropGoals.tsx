@@ -1,28 +1,50 @@
 "use client";
 
+import {
+  Wheat,
+  Bean,
+  Flower2,
+  Sprout,
+  Carrot,
+  Droplet,
+  ShieldCheck,
+  Coins,
+  Tractor,
+  Snowflake,
+  Check,
+  type LucideIcon,
+} from "lucide-react";
 import type { ConstraintId, CropGoals, GoalId } from "@/lib/types";
+import { useLang } from "@/lib/i18n";
 
-const CROPS: { id: string; label: string }[] = [
-  { id: "rice", label: "🌾 Rice" },
-  { id: "wheat", label: "🌾 Wheat" },
-  { id: "maize", label: "🌽 Maize" },
-  { id: "soybean", label: "🫘 Soybean" },
-  { id: "cotton", label: "🧵 Cotton" },
-  { id: "potato", label: "🥔 Potato" },
-  { id: "vegetables", label: "🍅 Vegetables" },
-  { id: "sugarcane", label: "🎋 Sugarcane" },
+const CROPS: { id: string; Icon: LucideIcon; en: string; my: string }[] = [
+  { id: "rice", Icon: Wheat, en: "Rice", my: "စပါး" },
+  { id: "wheat", Icon: Wheat, en: "Wheat", my: "ဂျုံ" },
+  { id: "maize", Icon: Wheat, en: "Maize", my: "ပြောင်း" },
+  { id: "soybean", Icon: Bean, en: "Soybean", my: "ပဲပိစပ်" },
+  { id: "cotton", Icon: Flower2, en: "Cotton", my: "ဝါ" },
+  { id: "potato", Icon: Sprout, en: "Potato", my: "အာလူး" },
+  { id: "vegetables", Icon: Carrot, en: "Vegetables", my: "ဟင်းသီးဟင်းရွက်" },
+  { id: "sugarcane", Icon: Sprout, en: "Sugarcane", my: "ကြံ" },
 ];
 
-const GOALS: { id: GoalId; label: string; hint: string }[] = [
-  { id: "water", label: "💧 Save Water", hint: "Use less irrigation" },
-  { id: "nitrogen", label: "🌱 Rebuild Nitrogen", hint: "Restore soil fertility" },
-  { id: "erosion", label: "🛡️ Prevent Erosion", hint: "Protect topsoil" },
-  { id: "income", label: "💰 Extra Income", hint: "Add a cash crop" },
+const GOALS: {
+  id: GoalId;
+  Icon: LucideIcon;
+  en: string;
+  my: string;
+  hintEn: string;
+  hintMy: string;
+}[] = [
+  { id: "water", Icon: Droplet, en: "Save Water", my: "ရေချွေတာ", hintEn: "Use less irrigation", hintMy: "ရေသွင်း လျှော့ချ" },
+  { id: "nitrogen", Icon: Sprout, en: "Rebuild Nitrogen", my: "မြေဩဇာ ပြန်တည်", hintEn: "Restore soil fertility", hintMy: "မြေဩဇာ ပြန်ကောင်း" },
+  { id: "erosion", Icon: ShieldCheck, en: "Prevent Erosion", my: "တိုက်စားမှု ကာကွယ်", hintEn: "Protect topsoil", hintMy: "မြေဆီလွှာ ကာကွယ်" },
+  { id: "income", Icon: Coins, en: "Extra Income", my: "အပိုဝင်ငွေ", hintEn: "Add a cash crop", hintMy: "ရောင်းသီးနှံ ထည့်" },
 ];
 
-const CONSTRAINTS: { id: ConstraintId; label: string }[] = [
-  { id: "no_machinery", label: "🚜 No new specialized machinery" },
-  { id: "frost_sensitive", label: "❄️ Frost-sensitive area" },
+const CONSTRAINTS: { id: ConstraintId; Icon: LucideIcon; en: string; my: string }[] = [
+  { id: "no_machinery", Icon: Tractor, en: "No new specialized machinery", my: "စက်ပစ္စည်းသစ် မလို" },
+  { id: "frost_sensitive", Icon: Snowflake, en: "Frost-sensitive area", my: "ဆီးနှင်းဒဏ် ခံရသည့်နေရာ" },
 ];
 
 export default function Screen3CropGoals({
@@ -32,15 +54,13 @@ export default function Screen3CropGoals({
   value: CropGoals;
   onChange: (next: CropGoals) => void;
 }) {
+  const { t } = useLang();
   const goalsFull = value.goals.length >= 2;
 
   function toggleGoal(id: GoalId) {
     const has = value.goals.includes(id);
-    if (has) {
-      onChange({ ...value, goals: value.goals.filter((g) => g !== id) });
-    } else if (!goalsFull) {
-      onChange({ ...value, goals: [...value.goals, id] });
-    }
+    if (has) onChange({ ...value, goals: value.goals.filter((g) => g !== id) });
+    else if (!goalsFull) onChange({ ...value, goals: [...value.goals, id] });
   }
 
   function toggleConstraint(id: ConstraintId) {
@@ -55,31 +75,34 @@ export default function Screen3CropGoals({
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4">
-      <h2 className="text-lg font-bold text-neutral-900">
-        Your crop &amp; goals
+      <h2 className="text-lg font-extrabold text-ink">
+        {t("Your crop & goals", "သင့်သီးနှံနှင့် ရည်မှန်းချက်")}
       </h2>
-      <p className="mt-0.5 text-sm text-neutral-500">
-        Tell us what you grow and what matters most this season.
+      <p className="mt-0.5 text-sm text-muted">
+        {t(
+          "Tell us what you grow and what matters most this season.",
+          "ဤရာသီ သင်ဘာစိုက်သလဲ၊ ဘာအရေးကြီးဆုံးလဲ ပြောပြပါ။"
+        )}
       </p>
 
       {/* Current crop */}
-      <h3 className="mt-5 text-sm font-semibold text-neutral-700">
-        What are you growing now?
+      <h3 className="mt-5 text-sm font-bold text-ink">
+        {t("What are you growing now?", "အခု ဘာစိုက်နေသလဲ?")}
       </h3>
       <div className="mt-2 flex flex-wrap gap-2">
-        {CROPS.map((c) => {
-          const selected = value.crop === c.id;
+        {CROPS.map(({ id, Icon, en, my }) => {
+          const selected = value.crop === id;
           return (
             <button
-              key={c.id}
-              onClick={() => onChange({ ...value, crop: c.id })}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+              key={id}
+              onClick={() => onChange({ ...value, crop: id })}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold transition ${
                 selected
-                  ? "border-green-600 bg-green-600 text-white"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                  ? "border-grass bg-grass text-white"
+                  : "border-hair bg-surface text-ink hover:bg-black/[0.03]"
               }`}
             >
-              {c.label}
+              <Icon className="h-4 w-4" /> {t(en, my)}
             </button>
           );
         })}
@@ -87,66 +110,70 @@ export default function Screen3CropGoals({
 
       {/* Goals */}
       <div className="mt-6 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-neutral-700">
-          Your top goals
+        <h3 className="text-sm font-bold text-ink">
+          {t("Your top goals", "အဓိက ရည်မှန်းချက်များ")}
         </h3>
-        <span className="text-xs text-neutral-400">
-          {value.goals.length}/2 chosen
+        <span className="text-xs text-muted">
+          {value.goals.length}/2 {t("chosen", "ရွေးပြီး")}
         </span>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
-        {GOALS.map((g) => {
-          const selected = value.goals.includes(g.id);
+        {GOALS.map(({ id, Icon, en, my, hintEn, hintMy }) => {
+          const selected = value.goals.includes(id);
           const disabled = !selected && goalsFull;
           return (
             <button
-              key={g.id}
-              onClick={() => toggleGoal(g.id)}
+              key={id}
+              onClick={() => toggleGoal(id)}
               disabled={disabled}
               className={`rounded-2xl border p-3 text-left transition ${
                 selected
-                  ? "border-green-600 bg-green-50"
+                  ? "border-grass bg-grass/10"
                   : disabled
-                    ? "border-neutral-200 bg-neutral-50 opacity-50"
-                    : "border-neutral-300 bg-white hover:bg-neutral-50"
+                    ? "border-hair bg-black/[0.02] opacity-45"
+                    : "border-hair bg-surface hover:bg-black/[0.03]"
               }`}
             >
-              <div className="text-sm font-semibold text-neutral-900">
-                {g.label}
+              <div className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <Icon className="h-4 w-4 text-grass" /> {t(en, my)}
               </div>
-              <div className="mt-0.5 text-xs text-neutral-500">{g.hint}</div>
+              <div className="mt-0.5 text-xs text-muted">{t(hintEn, hintMy)}</div>
             </button>
           );
         })}
       </div>
 
       {/* Constraints */}
-      <h3 className="mt-6 text-sm font-semibold text-neutral-700">
-        Any constraints?{" "}
-        <span className="font-normal text-neutral-400">(optional)</span>
+      <h3 className="mt-6 text-sm font-bold text-ink">
+        {t("Any constraints?", "ကန့်သတ်ချက်များ?")}{" "}
+        <span className="font-normal text-muted">
+          {t("(optional)", "(မဖြစ်မနေ မဟုတ်)")}
+        </span>
       </h3>
       <div className="mt-2 space-y-2">
-        {CONSTRAINTS.map((c) => {
-          const selected = value.constraints.includes(c.id);
+        {CONSTRAINTS.map(({ id, Icon, en, my }) => {
+          const selected = value.constraints.includes(id);
           return (
             <button
-              key={c.id}
-              onClick={() => toggleConstraint(c.id)}
-              className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+              key={id}
+              onClick={() => toggleConstraint(id)}
+              className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-sm font-semibold transition ${
                 selected
-                  ? "border-green-600 bg-green-50 text-neutral-900"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                  ? "border-grass bg-grass/10 text-ink"
+                  : "border-hair bg-surface text-ink hover:bg-black/[0.03]"
               }`}
             >
-              <span>{c.label}</span>
+              <span className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-grass" /> {t(en, my)}
+              </span>
               <span
-                className={`grid h-5 w-5 place-items-center rounded-md border text-xs ${
+                className={`grid h-5 w-5 place-items-center rounded-md border ${
                   selected
-                    ? "border-green-600 bg-green-600 text-white"
-                    : "border-neutral-300 text-transparent"
+                    ? "border-grass bg-grass text-white"
+                    : "border-hair text-transparent"
                 }`}
               >
-                ✓
+                <Check className="h-3.5 w-3.5" />
               </span>
             </button>
           );
