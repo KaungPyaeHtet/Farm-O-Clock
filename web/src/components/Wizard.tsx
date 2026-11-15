@@ -71,7 +71,7 @@ export default function Wizard() {
     1: t("Continue", "ဆက်သွားမည်"),
     2: t("Next", "နောက်တစ်ဆင့်"),
     3: t("Analyze field", "လယ်ကို သုံးသပ်မည်"),
-    4: t("Pick sowing date", "စိုက်ရက် ရွေးမည်"),
+    4: t("Next: pick sowing date →", "နောက်: စိုက်ရက်ရွေး →"),
     5: t("Compare rotations", "လှည့်စိုက်နည်း နှိုင်းယှဉ်မည်"),
     6: t("See my plan", "အစီအစဉ် ကြည့်မည်"),
     7: t("Plan another field", "နောက်လယ် စီစဉ်မည်"),
