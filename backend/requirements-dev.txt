@@ -5,3 +5,5 @@ xgboost
 matplotlib
 pytest
 httpx
+pycountry
+netCDF4

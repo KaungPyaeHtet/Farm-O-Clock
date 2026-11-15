@@ -44,8 +44,8 @@ Detail: `backend/README.md` (API, models, deploy), `reports/README.md` (accuracy
 - [x] Farmer reports blended into soil moisture (10 km / 30 days; tested end to end, test rows deleted)
 
 ## 5. More NASA data (P1)
-- [ ] **(you)** Create a free NASA Earthdata login (urs.earthdata.nasa.gov) → Generate Token → paste after `EARTHDATA_TOKEN=` in `backend/.env` (slot already added) → tell me, then I build: SMAP L4 soil moisture vs POWER `GWETTOP`
-- [ ] **(blocked on the same login)** GPM IMERG rain vs POWER `PRECTOTCORR`
+- [X] **(you)** Create a free NASA Earthdata login (urs.earthdata.nasa.gov) → Generate Token → paste after `EARTHDATA_TOKEN=` in `backend/.env` (slot already added) → tell me, then I build: SMAP L4 soil moisture vs POWER `GWETTOP`
+- [X] **(blocked on the same login)** GPM IMERG rain vs POWER `PRECTOTCORR`
 - [x] MODIS NDVI (Planetary Computer) → "Green cover" card: now vs usual (stress), usual bare months, water-pin warning
 - [x] SoilGrids → "Soil" card (texture, organic matter, pH) + soil-health start of each rotation
 
@@ -77,4 +77,9 @@ Detail: `backend/README.md` (API, models, deploy), `reports/README.md` (accuracy
 - [ ] **(you)** Paste the corrected summary into the Space Apps submission
 - [ ] Optional: add the new results to the deck (data-driven partner crops 95 % / 79 %, water-pin check) — say if you want it
 - [ ] Next validation: district- or field-level yields (Myanmar DoA, USDA NASS county with an API key) to test the sowing week itself
-- [ ] Possible next: data-driven erosion/income scores (still fixed rules), crop-calendar anchoring for sowing weeks
+- [x] Erosion score from data: RUSLE soil loss (rain erosivity from NASA POWER, soil erodibility from SoilGrids, slope from SRTM, crop cover factor) — `web/src/lib/erosion.ts`
+- [x] Income score from data: FAOSTAT national yield × farm-gate price per crop and country (world median price where a country reports none, e.g. Myanmar, India) — `web/src/lib/economics.ts`, built by `backend/eval/build_economics.py`
+- [x] Backend warm-up: the app wakes the model API when it opens (`/api/warm`)
+- [ ] District-scale yield test with GDHY gridded yields (data downloaded, analysis not yet run) — the sowing week itself still needs planting-date yield data
+- [ ] Add the newest results to the slide deck (partner crops 95 % / 79 %, water-pin check, erosion + income from data)
+- [ ] Possible next: crop-calendar anchoring for sowing weeks

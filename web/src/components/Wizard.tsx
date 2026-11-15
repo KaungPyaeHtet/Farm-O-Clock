@@ -32,6 +32,7 @@ export default function Wizard() {
   const [step, setStep] = useState(1);
   const [pin, setPin] = useState<LatLng | null>(null);
   const [place, setPlace] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
 
   // Pin from search → use the searched name; pin from a map tap → look up the nearest place.
   // Every pin (tap, drag, "my location", search) is checked against ESA WorldCover first:
@@ -53,11 +54,14 @@ export default function Wizard() {
     if (lc?.cover === "built-up") setPinMsg("town");
     setPin(p);
     setPlace(name ?? null);
-    if (!name) {
-      fetchJson<{ name: string | null }>(`/api/geocode/reverse?lat=${p.lat.toFixed(4)}&lng=${p.lng.toFixed(4)}`)
-        .then((d) => setPlace((cur) => cur ?? d.name ?? null))
-        .catch(() => {});
-    }
+    setCountry(null);
+    fetchJson<{ name: string | null; country: string | null }>(`/api/geocode/reverse?lat=${p.lat.toFixed(4)}&lng=${p.lng.toFixed(4)}`)
+      .then((d) => {
+        if (seq !== pickSeq.current) return;
+        setCountry(d.country ?? null);
+        if (!name) setPlace((cur) => cur ?? d.name ?? null);
+      })
+      .catch(() => {});
     return true;
   }
   const placeLabel = place ?? (pin ? `${pin.lat.toFixed(2)}, ${pin.lng.toFixed(2)}` : "");
@@ -75,6 +79,11 @@ export default function Wizard() {
 
   const canNext =
     step === 1 ? !!pin && !checking : step === 3 ? !!cropGoals.crop && cropGoals.goals.length >= 1 : true;
+
+  // Wake the model backend as soon as the app opens (it sleeps when idle).
+  useEffect(() => {
+    fetch("/api/warm").catch(() => {});
+  }, []);
 
   // Browser/phone Back moves between steps instead of leaving the app.
   useEffect(() => {
@@ -174,8 +183,8 @@ export default function Wizard() {
         {step === 3 && <Screen3CropGoals value={cropGoals} onChange={setCropGoals} />}
         {step === 4 && pin && <SeasonReplay pin={pin} />}
         {step === 5 && pin && <SowingCalendar pin={pin} />}
-        {step === 6 && <Screen5RotationCompare cropGoals={cropGoals} pin={pin} />}
-        {step === 7 && <Screen6Guidance pin={pin} place={placeLabel} cropGoals={cropGoals} />}
+        {step === 6 && <Screen5RotationCompare cropGoals={cropGoals} pin={pin} country={country} />}
+        {step === 7 && <Screen6Guidance pin={pin} place={placeLabel} country={country} cropGoals={cropGoals} />}
       </section>
 
       <footer className="shrink-0 border-t border-hair bg-surface">

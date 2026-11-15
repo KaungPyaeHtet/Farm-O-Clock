@@ -7,6 +7,8 @@
 // swapped in without touching the UI.
 
 import type { GoalId } from "./types";
+import { soilLoss } from "./erosion";
+import { rotationIncome } from "./economics";
 
 export type StrategyId = "baseline" | "water" | "soil";
 
@@ -22,6 +24,8 @@ export type ScoredStrategy = {
   goalFit: number; // 0-100 vs the farmer's chosen goals
   soilTrajectory: number[]; // soil health across years 1-3 (0-100)
   irrigationMm: number | null; // FAO-56 extra water over 3 years (null = not measured)
+  soilLossT: number | null; // RUSLE t/ha/yr (null = not measured)
+  incomeUsd: number | null; // FAO gross income USD/ha/yr (null = unknown)
   isBest: boolean;
 };
 
@@ -90,6 +94,12 @@ export type FieldInputs = {
   partners?: { water?: string; soil?: string };
   /** Share of past seasons that were low risk for each plan's crops at this pin (0-1), from /api/rotation */
   lowRisk?: Partial<Record<StrategyId, number>>;
+  /** For RUSLE soil loss: yearly rain (from /api/rotation), slope (SRTM), soil texture (SoilGrids) */
+  annualRainMm?: number;
+  slopeDeg?: number;
+  soilTex?: { sand: number; silt: number; clay: number; soc: number };
+  /** ISO-2 country for FAO yields x prices (income) */
+  country?: string | null;
 };
 
 /** Shape of /api/rotation → FieldInputs. */
@@ -100,6 +110,7 @@ export function inputsFromRotation(r: RotationApi): FieldInputs {
   return {
     water: Object.fromEntries(Object.entries(r.plans).map(([k, v]) => [k, v.water])) as FieldInputs["water"],
     partners: { water: r.plans.water?.rotation[1], soil: r.plans.soil?.rotation[1] },
+    annualRainMm: (r as RotationApi & { annual_rain_mm?: number }).annual_rain_mm,
     lowRisk: Object.fromEntries(
       Object.entries(r.plans).filter(([, v]) => v.low_risk_share != null).map(([k, v]) => [k, v.low_risk_share as number])
     ) as FieldInputs["lowRisk"],
@@ -139,6 +150,17 @@ export function scoreStrategies(
     },
   };
 
+  const site =
+    inputs.annualRainMm != null && inputs.slopeDeg != null && inputs.soilTex
+      ? { annualRainMm: inputs.annualRainMm, slopeDeg: inputs.slopeDeg, ...inputs.soilTex, socGkg: inputs.soilTex.soc }
+      : null;
+  const lossOf = (rot: string[]) => (site ? soilLoss(site, rot) : null);
+  const baseIncome = inputs.country !== undefined ? rotationIncome(meta.baseline.rotation, inputs.country) : null;
+  const incomeScore = (rot: string[]) => {
+    const v = inputs.country !== undefined ? rotationIncome(rot, inputs.country) : null;
+    return v != null && baseIncome ? clamp((50 * v) / baseIncome) : null;
+  };
+
   const scored = (Object.keys(PROFILES) as StrategyId[]).map((id) => {
     const p = PROFILES[id];
     const soil = clamp(p.soil + p.nfix * 8 - hot * 12 - dry * 6 - wet * 4);
@@ -165,8 +187,9 @@ export function scoreStrategies(
     const goalMetric: Record<GoalId, number> = {
       water: waterThrift,
       nitrogen: soil,
-      erosion: clamp(p.erosion * 100 - dry * 10),
-      income: p.income,
+      // Measured when inputs are there: RUSLE soil loss (11 t/ha/yr = 50) and FAO income vs keeping the current crop.
+      erosion: lossOf(meta[id].rotation) != null ? clamp(100 - lossOf(meta[id].rotation)! * 4.5 - dry * 10) : clamp(p.erosion * 100 - dry * 10),
+      income: incomeScore(meta[id].rotation) ?? p.income,
     };
     const goalFit = goals.length
       ? clamp(goals.reduce((a, g) => a + goalMetric[g], 0) / goals.length)
@@ -191,6 +214,8 @@ export function scoreStrategies(
       goalFit,
       soilTrajectory,
       irrigationMm,
+      soilLossT: lossOf(meta[id].rotation),
+      incomeUsd: inputs.country !== undefined ? rotationIncome(meta[id].rotation, inputs.country) : null,
       isBest: false,
     };
   });

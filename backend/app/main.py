@@ -131,6 +131,7 @@ def rotation(r: RotationReq):
         out[sid] = {"rotation": [display(c) for c in crops],
                     "water": rotation_water(loc.df, r.lat, crops, loc.weeks[wi], loc.base),
                     "low_risk_share": round(float(sum(shares) / len(shares)), 3) if shares else None}
-    return {"sowing_doy": loc.weeks[wi], "plans": out,
+    annual = float(loc.rain[loc.rain.index.year.isin(loc.base)].mean() * 365)
+    return {"sowing_doy": loc.weeks[wi], "plans": out, "annual_rain_mm": round(annual),
             "candidates": {k: [{**c, "crop": display(c["crop"])} for c in picks[k]["candidates"]] for k in ("water", "soil")},
             "method": "partners chosen by low-risk share + FAO-56 irrigation + ECOCROP temperature fit; held-out test in reports/"}

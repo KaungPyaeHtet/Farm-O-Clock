@@ -7,7 +7,7 @@ import type { CropGoals, LatLng } from "@/lib/types";
 import { useLang } from "@/lib/i18n";
 import { cropLabel, scoreStrategies, STRATEGY_TEXT as STRAT_TEXT, type FieldInputs, type RotationApi, inputsFromRotation, type ScoredStrategy } from "@/lib/strategies";
 import { fetchJson } from "@/lib/fetchJson";
-import type { SoilData } from "@/lib/types";
+import type { EnvData, SoilData } from "@/lib/types";
 import { card } from "@/lib/ui";
 import ReactiveField from "@/components/ReactiveField";
 import ScenarioNote from "@/components/ScenarioNote";
@@ -90,6 +90,13 @@ function StrategyCard({ s }: { s: ScoredStrategy }) {
         </p>
       )}
 
+      {(s.incomeUsd != null || (s.soilLossT != null && s.soilLossT >= 1)) && (
+        <p className="mt-1 text-xs text-muted">
+          {s.incomeUsd != null && t(`Income: about $${Math.round(s.incomeUsd / 10) * 10}/ha a year`, `ဝင်ငွေ: တစ်နှစ် ဟက်တာလျှင် $${Math.round(s.incomeUsd / 10) * 10} ခန့်`)}
+          {s.incomeUsd != null && s.soilLossT != null && s.soilLossT >= 1 && " · "}
+          {s.soilLossT != null && s.soilLossT >= 1 && t(`Soil loss: about ${s.soilLossT.toFixed(0)} t/ha a year`, `မြေဆုံးရှုံး: တစ်နှစ် ဟက်တာလျှင် ${s.soilLossT.toFixed(0)} တန်ခန့်`)}
+        </p>
+      )}
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Rating Icon={Sprout} label={t("Soil", "မြေ")} value={soilEnd} />
         <Rating Icon={Droplet} label={t("Water", "ရေ")} value={s.waterThrift} />
@@ -99,7 +106,7 @@ function StrategyCard({ s }: { s: ScoredStrategy }) {
   );
 }
 
-export default function Screen5RotationCompare({ cropGoals, pin }: { cropGoals: CropGoals; pin: LatLng | null }) {
+export default function Screen5RotationCompare({ cropGoals, pin, country }: { cropGoals: CropGoals; pin: LatLng | null; country: string | null }) {
   const { t } = useLang();
   const [rain, setRain] = useState(50);
   const [heat, setHeat] = useState(50);
@@ -113,8 +120,11 @@ export default function Screen5RotationCompare({ cropGoals, pin }: { cropGoals: 
     fetchJson<RotationApi>(`/api/rotation?lat=${pin.lat}&lng=${pin.lng}&crop=${crop}`)
       .then((d) => active && setInputs((i) => ({ ...i, ...inputsFromRotation(d) })))
       .catch(() => {});
+    fetchJson<EnvData>(`/api/environment?lat=${pin.lat}&lng=${pin.lng}`)
+      .then((d) => active && d.terrain.value != null && setInputs((i) => ({ ...i, slopeDeg: d.terrain.value as number })))
+      .catch(() => {});
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
-      .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health })))
+      .then((d) => active && setInputs((i) => ({ ...i, soilHealth: d.health, soilTex: { sand: d.sand, silt: d.silt, clay: d.clay, soc: d.soc } })))
       .catch(() => {});
     return () => {
       active = false;
@@ -123,10 +133,10 @@ export default function Screen5RotationCompare({ cropGoals, pin }: { cropGoals: 
 
   const strategies = useMemo(
     () =>
-      scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, inputs).sort(
+      scoreStrategies(cropGoals.crop, cropGoals.goals, rain, heat, { ...inputs, country }).sort(
         (a, b) => b.goalFit - a.goalFit || b.overall - a.overall
       ),
-    [cropGoals.crop, cropGoals.goals, rain, heat, inputs]
+    [cropGoals.crop, cropGoals.goals, rain, heat, inputs, country]
   );
 
   function sliderLabel(kind: "rain" | "heat", v: number): string {

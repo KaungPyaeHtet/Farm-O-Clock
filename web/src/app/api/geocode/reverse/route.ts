@@ -30,8 +30,11 @@ export async function GET(req: NextRequest) {
     );
     if (!res.ok) throw new Error(`Nominatim ${res.status}`);
     const d = (await res.json()) as { address?: Addr; error?: string };
-    return NextResponse.json({ name: d.address ? placeName(d.address) : null });
+    return NextResponse.json({
+      name: d.address ? placeName(d.address) : null,
+      country: d.address?.country_code ? d.address.country_code.toUpperCase() : null,
+    });
   } catch {
-    return NextResponse.json({ name: null });
+    return NextResponse.json({ name: null, country: null });
   }
 }

@@ -32,10 +32,12 @@ function Fact({ Icon, label, children }: { Icon: typeof Sprout; label: string; c
 export default function Screen6Guidance({
   pin,
   place,
+  country,
   cropGoals,
 }: {
   pin: LatLng | null;
   place: string;
+  country: string | null;
   cropGoals: CropGoals;
 }) {
   const { lang, t } = useLang();
@@ -49,9 +51,9 @@ export default function Screen6Guidance({
   const [inputs, setInputs] = useState<FieldInputs>({});
 
   const best = useMemo(() => {
-    const scored = scoreStrategies(cropGoals.crop, cropGoals.goals, 50, 50, inputs);
+    const scored = scoreStrategies(cropGoals.crop, cropGoals.goals, 50, 50, { ...inputs, country });
     return scored.find((s) => s.isBest) ?? scored[0];
-  }, [cropGoals.crop, cropGoals.goals, inputs]);
+  }, [cropGoals.crop, cropGoals.goals, inputs, country]);
 
   useEffect(() => {
     if (!pin) return;
@@ -65,12 +67,16 @@ export default function Screen6Guidance({
     fetchJson<SoilData>(`/api/soil?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => {
         if (!active) return;
-        setInputs((i) => ({ ...i, soilHealth: d.health }));
+        setInputs((i) => ({ ...i, soilHealth: d.health, soilTex: { sand: d.sand, silt: d.silt, clay: d.clay, soc: d.soc } }));
         setSoilText({ texture: d.texture, organic: d.organic });
       })
       .catch(() => {});
     fetchJson<EnvData>(`/api/environment?lat=${pin.lat}&lng=${pin.lng}`)
-      .then((d) => active && d.soilMoisture.value != null && setSatWet(d.soilMoisture.value / 100))
+      .then((d) => {
+        if (!active) return;
+        if (d.soilMoisture.value != null) setSatWet(d.soilMoisture.value / 100);
+        if (d.terrain.value != null) setInputs((i) => ({ ...i, slopeDeg: d.terrain.value as number }));
+      })
       .catch(() => {});
     fetchJson<ReplayData>(`/api/replay?lat=${pin.lat}&lng=${pin.lng}`)
       .then((d) => {
