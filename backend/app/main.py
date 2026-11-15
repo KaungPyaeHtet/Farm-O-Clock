@@ -11,6 +11,7 @@ from datetime import date
 from functools import lru_cache
 
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from farm import risk_model as RM
@@ -20,6 +21,28 @@ from farm.water import CROPS, rotation_water
 from farm.rotation import Field as Series, crop_stats, display, pick_partners
 
 app = FastAPI(title="Farm O'Clock API", version="1.0")
+
+# The web app reaches us server-side (web/src/lib/backend.ts proxies with x-api-key),
+# so CORS is not needed for normal traffic. But allow direct browser calls from our
+# own frontends (and localhost dev) so the API can be hit from the browser too —
+# otherwise the browser's preflight gets a bare 405 and reads as "backend rejected".
+# ALLOWED_ORIGINS can override this list in Vercel (comma-separated).
+_default_origins = [
+    "https://farm-oclock-five.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+_env_origins = os.environ.get("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = [o.strip() for o in _env_origins.split(",") if o.strip()] or _default_origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Vercel preview deployments
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["content-type", "x-api-key"],
+    max_age=86400,
+)
+
 MODEL = RM.load()
 API_KEY = os.environ.get("BACKEND_API_KEY")  # optional shared secret with the web app
 
