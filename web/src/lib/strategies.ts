@@ -20,6 +20,7 @@ export type ScoredStrategy = {
   resilience: number; // 0-100 (higher better)
   overall: number; // 0-100
   goalFit: number; // 0-100 vs the farmer's chosen goals
+  soilTrajectory: number[]; // soil health across years 1-3 (0-100)
   isBest: boolean;
 };
 
@@ -130,7 +131,25 @@ export function scoreStrategies(
       ? clamp(goals.reduce((a, g) => a + goalMetric[g], 0) / goals.length)
       : overall;
 
-    return { id, ...meta[id], soil, waterThrift, resilience, overall, goalFit, isBest: false };
+    // Soil-health trajectory over 3 years. Baseline (monocrop) degrades;
+    // the legume/cover-crop option rebuilds soil year on year.
+    const perYear =
+      id === "soil" ? 9 + p.nfix * 4 : id === "water" ? 3 : -4;
+    const adj = perYear - (dry + hot) * 2.5;
+    const start = clamp(48 + p.nfix * 6 + p.erosion * 6 - dry * 5 - hot * 4);
+    const soilTrajectory = [0, 1, 2].map((y) => clamp(start + y * adj));
+
+    return {
+      id,
+      ...meta[id],
+      soil,
+      waterThrift,
+      resilience,
+      overall,
+      goalFit,
+      soilTrajectory,
+      isBest: false,
+    };
   });
 
   // Mark the best fit for the farmer's goals (ties broken by overall).
