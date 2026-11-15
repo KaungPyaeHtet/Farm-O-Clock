@@ -7,9 +7,10 @@ import Screen2Environment from "./screens/Screen2Environment";
 import Screen3CropGoals from "./screens/Screen3CropGoals";
 import Screen4Historical from "./screens/Screen4Historical";
 import Screen5RotationCompare from "./screens/Screen5RotationCompare";
+import Screen6Guidance from "./screens/Screen6Guidance";
 
 const TOTAL_STEPS = 6;
-const LAST_BUILT_STEP = 5; // screen 6 is a placeholder for now
+const LAST_BUILT_STEP = 6; // all screens built
 
 // Per-step label for the primary "Next" button.
 const NEXT_LABEL: Record<number, string> = {
@@ -18,6 +19,7 @@ const NEXT_LABEL: Record<number, string> = {
   3: "Analyze Field →",
   4: "Compare Strategies →",
   5: "Get AI Guidance →",
+  6: "↻ Plan another field",
 };
 
 export default function Wizard() {
@@ -41,9 +43,11 @@ export default function Wizard() {
     if (step < LAST_BUILT_STEP) {
       setStep((s) => s + 1);
     } else {
-      alert(
-        "Screen 6 (AI guidance & checklist) is coming in the next feature branch! 🚧"
-      );
+      // Final step — start a fresh plan.
+      setPin(null);
+      setEnv(null);
+      setCropGoals({ crop: null, goals: [], constraints: [] });
+      setStep(1);
     }
   }
 
@@ -86,6 +90,7 @@ export default function Wizard() {
         )}
         {step === 4 && pin && <Screen4Historical pin={pin} />}
         {step === 5 && <Screen5RotationCompare cropGoals={cropGoals} />}
+        {step === 6 && <Screen6Guidance pin={pin} cropGoals={cropGoals} />}
       </section>
 
       {/* Sticky footer */}
